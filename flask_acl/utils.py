@@ -1,10 +1,10 @@
+import logging
+
 from .permissions import parse_permissions
 from .predicates import parse_predicate
 
 
-Allow = True
-Deny = False
-
+log = logging.getLogger(__name__)
 
 
 def parse_state(state):
@@ -64,7 +64,7 @@ def iter_object_aces(obj):
         pass
 
     try:
-        for ace in iter_object_aces(obj, '__acl_parent__'):
+        for ace in iter_object_aces(getattr(obj, '__acl_parent__')):
             yield ace
     except AttributeError:
         pass
@@ -84,3 +84,4 @@ def can(permission, obj, **kwargs):
                 log.debug('ACE matched: %s%r via %r' % ('' if state else 'not ', permission, predicate))
                 return state
     return None
+

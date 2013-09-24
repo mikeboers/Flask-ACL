@@ -4,12 +4,17 @@ import logging
 from urllib import urlencode
 
 import werkzeug as wz
-from flask import request
+import flask
+from flask.ext.login import current_user
+
+from . import utils
 
 
 log = logging.getLogger(__name__)
 
 
+class _Redirect(Exception):
+    pass
 
 class AuthManager(object):
 
@@ -18,7 +23,24 @@ class AuthManager(object):
             self.init_app(app)
 
     def init_app(self, app):
-        pass
+        app.errorhandler(_Redirect)(lambda r: flask.redirect(r.args[0]))
+
+    ACL = staticmethod(utils.ACL)
+    can = staticmethod(utils.can)
+
+    login_view = 'login'
+
+    def requires(self, *args, **kwargs):
+        flash_message = kwargs.pop('flash', 'You are not authorized for that action.')
+        if not self.can(*args, **kwargs):
+            if flash_message:
+                flask.flash(flash_message, 'danger')
+            if current_user.is_authenticated():
+                flask.abort(403)
+            elif self.login_view:
+                raise _Redirect(flask.url_for(self.login_view))
+            else:
+                flask.abort(401)
 
 
 # Add some proxies
@@ -26,9 +48,6 @@ from . import predicates
 for name in dir(predicates):
     if name[:1].isupper():
         setattr(AuthManager, name, getattr(predicates, name))
-from . import utils
-for name in ('ACL', 'can', ):
-    setattr(AuthManager, name, getattr(utils, name))
 
 
 class AuthAppMixin(object):
