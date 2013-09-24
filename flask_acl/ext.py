@@ -30,14 +30,17 @@ class AuthManager(object):
 
     login_view = 'login'
 
-    def requires(self, *args, **kwargs):
+    def assert_can(self, *args, **kwargs):
+
         flash_message = kwargs.pop('flash', 'You are not authorized for that action.')
+        stealth = kwargs.pop('stealth', False)
+
         if not self.can(*args, **kwargs):
             if flash_message:
                 flask.flash(flash_message, 'danger')
             if current_user.is_authenticated():
                 flask.abort(403)
-            elif self.login_view:
+            elif not stealth and self.login_view:
                 raise _Redirect(flask.url_for(self.login_view))
             else:
                 flask.abort(401)
