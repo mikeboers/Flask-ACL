@@ -8,6 +8,7 @@ class AllPermissions(object):
 
    
 string_permissions = {
+    'ANY': AllPermissions(),
     'ALL': AllPermissions(),
 }
 

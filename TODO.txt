@@ -1,0 +1,23 @@
+
+Figure out what to do about ANY/ALL.
+
+ACLs on groups and repos, where:
+    - OWNER is the owner
+    - MEMBER is members of the group (or repo's group)
+    - ANY is anyone
+
+
+Put the predicate context onto a Flask stack proxy?
+
+    from flask.ext.acl import predicate_context
+
+
+@flask.ext.acl.register_permission
+    use for:
+        delete -> delete, write, read
+        write -> write, read
+        read -> read
+
+
+@flask.ext.acl.register_predicate
+
