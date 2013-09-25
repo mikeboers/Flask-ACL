@@ -18,17 +18,47 @@ class _Redirect(Exception):
 
 class AuthManager(object):
 
+    login_view = 'login'
+
     def __init__(self, app=None):
         if app:
             self.init_app(app)
 
     def init_app(self, app):
         app.errorhandler(_Redirect)(lambda r: flask.redirect(r.args[0]))
+        app._acl_context_processors = []
 
-    ACL = staticmethod(utils.ACL)
-    can = staticmethod(utils.can)
+    def context_processor(self, func):
+        flask.current_app._acl_context_processor.append(func)
 
-    login_view = 'login'
+    @staticmethod
+    def can(permission, obj, **kwargs):
+        """Check if we can do something with an object.
+
+        >>> auth.can('read', some_object)
+        >>> auth.can('write', another_object, group=some_group)
+
+        """
+
+        context = {}
+        for func in flask.current_app._acl_context_processors:
+            context.update(func())
+        context.update(utils.get_object_acl_context(obj))
+        context.update(kwargs)
+
+        log.info('can context: %r' % context)
+        for state, predicate, permissions in utils.iter_object_acl(obj):
+            pred_match = predicate(**context)
+            perm_match = permission in permissions
+            log.info('can %s %r(%s) %r -> %s %s' % (
+                'ALLOW' if state else 'DENY',
+                predicate, pred_match,
+                permissions,
+                'ALLOW' if (pred_match and perm_match) else 'DENY', permission
+            ))
+            if pred_match and perm_match:
+                return state
+        return None
 
     def assert_can(self, *args, **kwargs):
 

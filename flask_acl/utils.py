@@ -7,7 +7,7 @@ from .predicates import parse_predicate
 log = logging.getLogger(__name__)
 
 
-def parse_state(state):
+def _parse_state(state):
     """Turn a bool, or string, into a bool.
 
     Rules:
@@ -21,68 +21,47 @@ def parse_state(state):
     return dict(allow=True, deny=False)[state]
 
 
-def parse_ace(ace):
-    """Parse a string, or 3-tuple into an ACE"""
-    if isinstance(ace, basestring):
-        ace = ace.split(None, 2)
-    state, predicate, permissions = ace
-    return parse_state(state), parse_predicate(predicate), parse_permissions(permissions)
-
-
-def iter_parse_acl(acl):
+def _iter_parse_acl(acl_iter):
     """Parse a string, or list of ACE definitions, into usable ACEs."""
-    if isinstance(acl, basestring):
-        for line in acl.splitlines():
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            yield parse_ace(line)
-    else:
-        for ace in acl:
-            yield parse_ace(ace)
+
+    if isinstance(acl_iter, basestring):
+        acl_iter = [acl_iter]
+
+    for acl in acl_iter:
+
+        if isinstance(acl, basestring):
+            aces = acl.splitlines()
+            aces = [a.strip() for a in aces]
+            aces = [a for a in aces if a and not a.startswith('#')]
+        else:
+            aces = acl
+
+        for ace in aces:
+
+            if isinstance(ace, basestring):
+                ace = ace.split(None, 2)
+            state, predicate, permissions = ace
+            yield _parse_state(state), parse_predicate(predicate), parse_permissions(permissions)
 
 
-def ACL(*acl):
-    def _ACL(func):
-        func.__dict__.setdefault('__acl__', []).extend(parse_ace(x) for x in acl)
-        return func
-    return _ACL
-
-
-def requires(*predicates):
-    def _requires(func):
-        func.__dict__.setdefault('__auth_predicates__', []).extend(parse_predicate(x) for x in predicates)
-        return func
-    return _requires
-
-
-def iter_object_aces(obj):
+def iter_object_acl(obj):
     try:
-        for ace in iter_parse_acl(getattr(obj, '__acl__')):
+        for ace in _iter_parse_acl(getattr(obj, '__acl__')):
             yield ace
-    except AttributeError:
-        pass
-
-    try:
-        for ace in iter_object_aces(getattr(obj, '__acl_parent__')):
-            yield ace
+        for base in getattr(obj, '__acl_bases__'):
+            for ace in iter_object_acl(base):
+                yield ace
     except AttributeError:
         pass
 
 
-def can(permission, obj, **kwargs):
-    """Check if we can do something with an object.
+def get_object_acl_context(obj):
+    context = {}
+    for base in getattr(obj, '__acl_bases__', ()):
+        context.update(get_object_acl_context(base))
+    context.update(getattr(obj, '__acl_context__', {}))
+    return context
 
-    >>> auth.can('read', some_object)
-    >>> auth.can('write', another_object, group=some_group)
 
-    """
-    for state, predicate, permissions in iter_object_aces(obj):
-        predicate = parse_predicate(predicate)
-        pred_match = predicate(**kwargs)
-        log.info('ACE: %r %r %r -> %r' % (state, predicate, permissions, pred_match))
-        if pred_match and permission in parse_permissions(permissions):
-            log.info('ACE matched: %s%r via %r' % ('' if state else 'not ', permission, predicate))
-            return state
-    return None
+
 
