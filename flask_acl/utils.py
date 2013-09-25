@@ -79,9 +79,10 @@ def can(permission, obj, **kwargs):
     """
     for state, predicate, permissions in iter_object_aces(obj):
         predicate = parse_predicate(predicate)
-        if predicate(**kwargs):
-            if permission in parse_permissions(permissions):
-                log.debug('ACE matched: %s%r via %r' % ('' if state else 'not ', permission, predicate))
-                return state
+        pred_match = predicate(**kwargs)
+        log.info('ACE: %r %r %r -> %r' % (state, predicate, permissions, pred_match))
+        if pred_match and permission in parse_permissions(permissions):
+            log.info('ACE matched: %s%r via %r' % ('' if state else 'not ', permission, predicate))
+            return state
     return None
 
