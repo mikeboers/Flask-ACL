@@ -71,7 +71,9 @@ class AuthManager(object):
             if current_user.is_authenticated():
                 flask.abort(403)
             elif not stealth and self.login_view:
-                raise _Redirect(flask.url_for(self.login_view))
+                raise _Redirect(flask.url_for(self.login_view) + '?' + urlencode(dict(next=
+                    flask.request.script_root + flask.request.path
+                )))
             else:
                 flask.abort(401)
 
