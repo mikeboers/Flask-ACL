@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import logging
+from pprint import pformat
 from urllib import urlencode
 
 import werkzeug as wz
@@ -46,7 +47,7 @@ class AuthManager(object):
         context.update(utils.get_object_acl_context(obj))
         context.update(kwargs)
 
-        log.info('can context: %r' % context)
+        log.info('can context: %s' % pformat(context))
         for state, predicate, permissions in utils.iter_object_acl(obj):
             pred_match = predicate(**context)
             perm_match = permission in permissions
