@@ -22,18 +22,17 @@ class AuthManager(object):
     login_view = 'login'
 
     def __init__(self, app=None):
+        self._context_processors = []
         if app:
             self.init_app(app)
 
     def init_app(self, app):
         app.errorhandler(_Redirect)(lambda r: flask.redirect(r.args[0]))
-        app._acl_context_processors = []
 
     def context_processor(self, func):
-        flask.current_app._acl_context_processor.append(func)
+        self._context_processors.append(func)
 
-    @staticmethod
-    def can(permission, obj, **kwargs):
+    def can(self, permission, obj, **kwargs):
         """Check if we can do something with an object.
 
         >>> auth.can('read', some_object)
@@ -42,7 +41,7 @@ class AuthManager(object):
         """
 
         context = {}
-        for func in flask.current_app._acl_context_processors:
+        for func in self._context_processors:
             context.update(func())
         context.update(utils.get_object_acl_context(obj))
         context.update(kwargs)
