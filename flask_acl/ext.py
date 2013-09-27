@@ -101,6 +101,17 @@ class AuthManager(object):
             else:
                 flask.abort(404)
 
+    def can_route(self, endpoint, method=None, **kwargs):
+
+        view = flask.current_app.view_functions.get(endpoint)
+        if not view:
+            endpoint, args = flask._request_ctx.top.match(endpoint)
+            view = flask.current_app.view_functions.get(endpoint)
+        if not view:
+            return False
+
+        return self.can('http.' + (method or 'GET').lower(), view, **kwargs)
+
 
 # Add some proxies
 from . import predicates
