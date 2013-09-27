@@ -90,11 +90,11 @@ class AuthManager(object):
                 flask.flash(flash_message, 'danger')
             if current_user.is_authenticated():
                 if flash_message is not False:
-                    flask.flash(flask_message or 'You are not permitted to "%s" this resource' % permission)
+                    flask.flash(flash_message or 'You are not permitted to "%s" this resource' % permission)
                 flask.abort(403)
             elif not stealth and self.login_view:
-                if flask_message is not False:
-                    flask.flash(flask_message or 'Please login for access.')
+                if flash_message is not False:
+                    flask.flash(flash_message or 'Please login for access.')
                 raise _Redirect(flask.url_for(self.login_view) + '?' + urlencode(dict(next=
                     flask.request.script_root + flask.request.path
                 )))
