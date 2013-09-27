@@ -1,11 +1,13 @@
 from __future__ import absolute_import
 
+import functools
 import logging
 from pprint import pformat
 from urllib import urlencode
 
 import werkzeug as wz
 import flask
+from flask import request
 from flask.ext.login import current_user
 
 from . import utils
@@ -31,6 +33,24 @@ class AuthManager(object):
 
     def context_processor(self, func):
         self._context_processors.append(func)
+
+    def ACL(self, *acl, **options):
+        def _ACL(func):
+
+            func.__acl__ = acl
+
+            @functools.wraps(func)
+            def wrapped(*args, **kwargs):
+                permission = 'http.' + request.method.lower()
+                self.assert_can(permission, func, **options)
+                return func(*args, **kwargs)
+
+            return wrapped
+        return _ACL
+
+    def _before_request(self):
+        print flask.request.endpoint
+        print dir(flask.request.endpoint)
 
     def can(self, permission, obj, **kwargs):
         """Check if we can do something with an object.
@@ -60,22 +80,26 @@ class AuthManager(object):
                 return state
         return None
 
-    def assert_can(self, *args, **kwargs):
+    def assert_can(self, permission, obj, **kwargs):
 
-        flash_message = kwargs.pop('flash', 'You are not authorized for that action.')
+        flash_message = kwargs.pop('flash', None)
         stealth = kwargs.pop('stealth', False)
 
-        if not self.can(*args, **kwargs):
-            if flash_message:
+        if not self.can(permission, obj, **kwargs):
+            if flash_message and not stealth:
                 flask.flash(flash_message, 'danger')
             if current_user.is_authenticated():
+                if flash_message is not False:
+                    flask.flash(flask_message or 'You are not permitted to "%s" this resource' % permission)
                 flask.abort(403)
             elif not stealth and self.login_view:
+                if flask_message is not False:
+                    flask.flash(flask_message or 'Please login for access.')
                 raise _Redirect(flask.url_for(self.login_view) + '?' + urlencode(dict(next=
                     flask.request.script_root + flask.request.path
                 )))
             else:
-                flask.abort(401)
+                flask.abort(404)
 
 
 # Add some proxies

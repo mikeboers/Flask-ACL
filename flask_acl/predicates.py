@@ -99,6 +99,7 @@ string_predicates = {
     'LOCAL': Local(),
     'REMOTE': Remote(),
     'ANY': Any(),
+    'ALL': Any(),
 }
 
 # More general predicate.

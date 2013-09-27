@@ -12,6 +12,7 @@ class AllPermissions(object):
 string_permissions = {
     'ANY': AllPermissions(),
     'ALL': AllPermissions(),
+    'http.get': set(('http.get', 'http.head', 'http.options')),
 }
 
 
