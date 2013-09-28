@@ -60,7 +60,7 @@ class AuthManager(object):
 
         """
 
-        context = {}
+        context = {'user': current_user}
         for func in self._context_processors:
             context.update(func())
         context.update(utils.get_object_acl_context(obj))

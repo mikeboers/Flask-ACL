@@ -1,5 +1,4 @@
 from flask import request
-from flask.ext.login import current_user
 
 
 def parse_predicate(input):
@@ -63,21 +62,21 @@ class Principal(object):
 
 
 class Authenticated(object):
-    def __call__(self, **kw):
-        return current_user.is_authenticated()
+    def __call__(self, user, **kw):
+        return user.is_authenticated()
     def __repr__(self):
         return 'AUTHENTICATED'
 
 class Active(object):
-    def __call__(self, **kw):
-        return current_user.is_active()
+    def __call__(self, user, **kw):
+        return user.is_active()
     def __repr__(self):
         return 'ACTIVE'
 
 
 class Anonymous(object):
-    def __call__(self, **kw):
-        return current_user.is_anonymous()
+    def __call__(self, user, **kw):
+        return user.is_anonymous()
     def __repr__(self):
         return 'ANONYMOUS'
 
