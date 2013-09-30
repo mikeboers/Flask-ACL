@@ -1,10 +1,5 @@
-import logging
-
 from .permissions import parse_permissions
 from .predicates import parse_predicate
-
-
-log = logging.getLogger(__name__)
 
 
 def _parse_state(state):

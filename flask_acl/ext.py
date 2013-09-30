@@ -66,11 +66,11 @@ class AuthManager(object):
         context.update(utils.get_object_acl_context(obj))
         context.update(kwargs)
 
-        log.info('can context: %s' % pformat(context))
+        log.debug('can context: %s' % pformat(context))
         for state, predicate, permissions in utils.iter_object_acl(obj):
             pred_match = predicate(**context)
             perm_match = permission in permissions
-            log.info('can %s %r(%s) %r -> %s %s' % (
+            log.debug('can %s %r(%s) %r -> %s %s' % (
                 'ALLOW' if state else 'DENY',
                 predicate, pred_match,
                 permissions,
