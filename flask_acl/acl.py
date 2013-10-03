@@ -1,3 +1,5 @@
+import re
+
 from .permission import parse_permission_set
 from .predicate import parse_predicate
 
@@ -18,7 +20,7 @@ def _parse_state(state):
 
     """
     if isinstance(state, bool):
-        return bool
+        return state
     state = str(state).lower()
     return _state_strings[state]
 
@@ -27,23 +29,15 @@ def _iter_parse_acl(acl_iter):
     """Parse a string, or list of ACE definitions, into usable ACEs."""
 
     if isinstance(acl_iter, basestring):
-        acl_iter = [acl_iter]
+        acl_iter = acl_iter.splitlines()
+        acl_iter = [re.sub(r'#.+', '', line).strip() for line in acl_iter]
+        acl_iter = filter(None, acl_iter)
 
-    for acl in acl_iter:
-
-        if isinstance(acl, basestring):
-            aces = acl.splitlines()
-            aces = [a.strip() for a in aces]
-            aces = [a for a in aces if a and not a.startswith('#')]
-        else:
-            aces = acl
-
-        for ace in aces:
-
-            if isinstance(ace, basestring):
-                ace = ace.split(None, 2)
-            state, predicate, permissions = ace
-            yield _parse_state(state), parse_predicate(predicate), parse_permission_set(permissions)
+    for ace in acl_iter:
+        if isinstance(ace, basestring):
+            ace = ace.split(None, 2)
+        state, predicate, permissions = ace
+        yield _parse_state(state), parse_predicate(predicate), parse_permission_set(permissions)
 
 
 def iter_graph(obj, parents_first=False):
@@ -82,7 +76,4 @@ def get_context(root):
     for obj in iter_graph(root, parents_first=True):
         context.update(getattr(obj, '__acl_context__', {}))
     return context
-
-
-
 
