@@ -1,10 +1,17 @@
 
+- ACE parsing should be able to pick up arguments to predicates:
+    "ALLOW ROLE('something') ANY" or
+    "ALLOW ROLE.something ANY" or
+    ('ALLOW', Role('wheel'), 'ANY')
+
 Figure out what to do about ANY/ALL.
 
-ACLs on groups and repos, where:
-    - OWNER is the owner
-    - MEMBER is members of the group (or repo's group)
-    - ANY is anyone
+- Should we have a mechanism for an ACL being different on a class vs its
+  instance, or should we do that via a @classproperty?
+
+  @classproperty
+  def __acl__(cls, self):
+    '''self may be None'''
 
 
 Put the predicate context onto a Flask stack proxy?
