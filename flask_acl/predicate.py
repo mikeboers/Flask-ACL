@@ -1,5 +1,7 @@
 from flask import request
 
+from .globals import current_auth
+
 
 def parse_predicate(input):
     
@@ -7,7 +9,7 @@ def parse_predicate(input):
         negate = input.startswith('!')
         if negate:
             input = input[1:]
-        predicate = string_predicates.get(input)
+        predicate = current_auth.predicates.get(input)
         if not predicate:
             raise ValueError('unknown predicate: %r' % input)
         if negate:
@@ -91,7 +93,7 @@ class Local(object):
 Remote = lambda: Not(Local())
 
 
-string_predicates = {
+default_predicates = {
     'ACTIVE': Active(),
     'ANONYMOUS': Anonymous(),
     'AUTHENTICATED': Authenticated(),

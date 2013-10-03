@@ -1,5 +1,7 @@
 from collections import Container, Callable
 
+from .globals import current_auth
+
 
 # Permissions
 class AllPermissions(object):
@@ -9,7 +11,7 @@ class AllPermissions(object):
         return 'ANY'
 
    
-string_permissions = {
+default_permission_sets = {
     'ANY': AllPermissions(),
     'ALL': AllPermissions(),
     'http.get': set(('http.get', 'http.head', 'http.options')),
@@ -18,9 +20,9 @@ string_permissions = {
 
 def parse_permission_set(input):
     if isinstance(input, basestring):
-        if input in string_permissions:
-            return string_permissions[input]
-        else:
+        try:
+            return current_auth.permission_sets[input]
+        except KeyError:
             raise ValueError('unknown permission set %r' % input)
     return input
 

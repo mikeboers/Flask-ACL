@@ -11,7 +11,8 @@ from flask import request
 from flask.ext.login import current_user
 
 from . import acl
-from .permission import check_permission
+from .permission import check_permission, default_permission_sets
+from .predicate import default_predicates
 
 log = logging.getLogger(__name__)
 
@@ -43,8 +44,8 @@ class AuthManager(object):
 
     def __init__(self, app=None):
         self._context_processors = []
-        self._string_permission_sets = {}
-        self._string_predicates = {}
+        self.permission_sets = default_permission_sets.copy()
+        self.predicates = default_predicates.copy()
         if app:
             self.init_app(app)
 
@@ -54,6 +55,19 @@ class AuthManager(object):
 
         # I suspect that Werkzeug has something for this already...
         app.errorhandler(_Redirect)(lambda r: flask.redirect(r.args[0]))
+
+    def predicate(self, name, predicate=None):
+        if predicate is None:
+            return functools.partial(self.predicate, name)
+        self.predicates[name] = predicate
+        return predicate
+
+    def permission_set(self, name, permission_set=None):
+        if permission_set is None:
+            return functools.partial(self.permission_set, name)
+        self.permission_sets[name] = permission_set
+        return permission_set
+
 
     def context_processor(self, func):
         """Register a function to build auth contexts.
