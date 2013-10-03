@@ -34,11 +34,17 @@ That ACL could be represented by:
 ~~~
 
 
-### Permissions
+### Permission Sets
 
 A "permission" is a single object that represents an action that a user may want to take. This can be a string, tuple, anyting, but usually I use strings such as `"group.read"` and `"group.write"`.
 
-A "permission set" is any object that supports the `__contains__` interface. In Python, a permission set contains a permission if `permission in permission_set` is true.
+A "permission set" may be a single string, a collection, or a callable.
+
+If a string, a permission is in the permission set if `permission == permission-set`.
+
+If a collection (e.g. `set`, `tuple`, `list`), a permission is in the permission set if `permission in permission_set`.
+
+If a callable, a permission is in the permission set if `permission_set(permission)`.
 
 
 ### Predicates
