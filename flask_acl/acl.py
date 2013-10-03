@@ -28,16 +28,23 @@ def _parse_state(state):
 def _iter_parse_acl(acl_iter):
     """Parse a string, or list of ACE definitions, into usable ACEs."""
 
-    if isinstance(acl_iter, basestring):
-        acl_iter = acl_iter.splitlines()
-        acl_iter = [re.sub(r'#.+', '', line).strip() for line in acl_iter]
-        acl_iter = filter(None, acl_iter)
+    print '_iter_parse_acl', repr(acl_iter)
 
-    for ace in acl_iter:
-        if isinstance(ace, basestring):
-            ace = ace.split(None, 2)
-        state, predicate, permissions = ace
-        yield _parse_state(state), parse_predicate(predicate), parse_permission_set(permissions)
+    if isinstance(acl_iter, basestring):
+        acl_iter = [acl_iter]
+
+    for ace_chunk in acl_iter:
+        if isinstance(ace_chunk, basestring):
+            ace_chunk = ace_chunk.splitlines()
+            ace_chunk = [re.sub(r'#.+', '', line).strip() for line in ace_chunk]
+            ace_chunk = filter(None, ace_chunk)
+        else:
+            ace_chunk = [ace_chunk]
+        for ace in ace_chunk:
+            if isinstance(ace, basestring):
+                ace = ace.split(None, 2)
+            state, predicate, permissions = ace
+            yield _parse_state(state), parse_predicate(predicate), parse_permission_set(permissions)
 
 
 def iter_graph(obj, parents_first=False):
