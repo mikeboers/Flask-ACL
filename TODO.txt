@@ -4,7 +4,8 @@
     "ALLOW ROLE.something ANY" or
     ('ALLOW', Role('wheel'), 'ANY')
 
-Figure out what to do about ANY/ALL.
+
+- Figure out what to do about ANY/ALL.
 
 - Should we have a mechanism for an ACL being different on a class vs its
   instance, or should we do that via a @classproperty?
@@ -19,7 +20,19 @@ Put the predicate context onto a Flask stack proxy?
     from flask.ext.acl import predicate_context
 
 
-@flask.ext.acl.register_permission
+@auth.predicate('ROOT')
+define Root(user, **ctx):
+    return 'wheel' in getattr(user, 'roles', set())
+
+
+- Permission checks via functions too?
+
+    @auth.permission('ANY'):
+    define AnyPermission(permission, **ctx):
+        return True
+
+
+
     use for:
         delete -> delete, write, read
         write -> write, read
