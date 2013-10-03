@@ -69,4 +69,4 @@ obj.__acl__ = '''
     Deny  ANY ANY
 '''
 check_permission('read', obj, **context)
-
+~~~
