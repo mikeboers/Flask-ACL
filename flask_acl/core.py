@@ -11,15 +11,31 @@ from flask import request
 from flask.ext.login import current_user
 
 from . import acl
-
+from .permission import check_permission
 
 log = logging.getLogger(__name__)
 
 
 
 
+def check(permission, raw_acl, **context):
+    # log.debug('check for %r in %s' % (permission, pformat(context)))
+    for state, predicate, permission_set in acl._iter_parse_acl(raw_acl):
+        pred_match = predicate(**context)
+        perm_match = check_permission(permission, permission_set)
+        # log.debug('can %s %r(%s) %r%s' % (
+        #     'ALLOW' if state else 'DENY',
+        #     predicate, pred_match,
+        #     permission_set,
+        #     ' -> ' + ('ALLOW' if state else 'DENY') + ' ' + permission if (pred_match and perm_match) else '',
+        # ))
+        if pred_match and perm_match:
+            return state
+
+
 class _Redirect(Exception):
     pass
+
 
 class AuthManager(object):
 
@@ -79,20 +95,7 @@ class AuthManager(object):
             context.update(func())
         context.update(acl.get_context(obj))
         context.update(kwargs)
-
-        # log.debug('can context: %s' % pformat(context))
-        for state, predicate, permissions in acl.iter_aces(obj):
-            pred_match = predicate(**context)
-            perm_match = permission in permissions
-            # log.debug('can %s %r(%s) %r -> %s %s' % (
-            #     'ALLOW' if state else 'DENY',
-            #     predicate, pred_match,
-            #     permissions,
-            #     'ALLOW' if (pred_match and perm_match) else 'DENY', permission
-            # ))
-            if pred_match and perm_match:
-                return state
-        return None
+        return check(permission, acl.iter_aces(obj), **context)
 
     def assert_can(self, permission, obj, **kwargs):
         """Make sure we have a permission, or abort the request.

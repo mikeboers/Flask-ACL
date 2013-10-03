@@ -28,9 +28,10 @@ define Root(user, **ctx):
 - Permission checks via functions too?
 
     @auth.permission('ANY'):
-    define AnyPermission(permission, **ctx):
+    define AnyPermission(permission):
         return True
 
+    Or, treat different types differently:
 
 
     use for:
