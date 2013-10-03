@@ -31,7 +31,7 @@ class Any(object):
 
 class Not(object):
     def __init__(self, predicate):
-        self.predicate = parse_predicate(predicate)
+        self.predicate = predicate
     def __call__(self, **kw):
         return not self.predicate(**kw)
     def __repr__(self):
@@ -43,7 +43,7 @@ class And(object):
     op = all
 
     def __init__(self, *predicates):
-        self.predicates = [parse_predicate(x) for x in predicates]
+        self.predicates = predicates
     def __call__(self, **kw):
         return self.op(x(**kw) for x in self.predicates)
     def __repr__(self):
@@ -54,20 +54,12 @@ class Or(And):
     op = any
 
 
-class Principal(object):
-    def __init__(self, principal):
-        self.principal = principal
-    def __call__(self, **kw):
-        return self.principal in request.user_principals
-    def __repr__(self):
-        return 'Principal(%r)' % self.principal
-
-
 class Authenticated(object):
     def __call__(self, user, **kw):
         return user.is_authenticated()
     def __repr__(self):
         return 'AUTHENTICATED'
+
 
 class Active(object):
     def __call__(self, user, **kw):
@@ -100,15 +92,5 @@ default_predicates = {
     'LOCAL': Local(),
     'REMOTE': Remote(),
     'ANY': Any(),
-    'ALL': Any(),
 }
 
-# More general predicate.
-class HasPermission(object):
-    def __init__(self, permission):
-        self.permission = permission
-    def __call__(self):
-        return request.has_permission(self.permission)
-
-
-        

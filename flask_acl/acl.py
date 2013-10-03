@@ -10,7 +10,8 @@ _state_strings = dict(
     deny=False,
 )
 
-def _parse_state(state):
+
+def parse_state(state):
     """Turn a bool, or string, into a bool.
 
     Rules:
@@ -25,40 +26,47 @@ def _parse_state(state):
     return _state_strings[state]
 
 
-def _iter_parse_acl(acl_iter):
+def parse_acl(acl_iter):
     """Parse a string, or list of ACE definitions, into usable ACEs."""
-
-    print '_iter_parse_acl', repr(acl_iter)
 
     if isinstance(acl_iter, basestring):
         acl_iter = [acl_iter]
 
-    for ace_chunk in acl_iter:
-        if isinstance(ace_chunk, basestring):
-            ace_chunk = ace_chunk.splitlines()
-            ace_chunk = [re.sub(r'#.+', '', line).strip() for line in ace_chunk]
-            ace_chunk = filter(None, ace_chunk)
+    for chunk in acl_iter:
+
+        if isinstance(chunk, basestring):
+            chunk = chunk.splitlines()
+            chunk = [re.sub(r'#.+', '', line).strip() for line in chunk]
+            chunk = filter(None, chunk)
         else:
-            ace_chunk = [ace_chunk]
-        for ace in ace_chunk:
+            chunk = [chunk]
+
+        for ace in chunk:
+
+            # If this was provided as a string, then parse the permission set.
+            # Otherwise, use it as-is, which will result in an equality test.
             if isinstance(ace, basestring):
                 ace = ace.split(None, 2)
-            state, predicate, permissions = ace
-            yield _parse_state(state), parse_predicate(predicate), parse_permission_set(permissions)
+                state, predicate, permission_set = ace
+                yield parse_state(state), parse_predicate(predicate), parse_permission_set(permission_set)
+            else:
+                state, predicate, permission_set = ace
+                yield parse_state(state), parse_predicate(predicate), permission_set
 
 
-def iter_graph(obj, parents_first=False):
+
+def iter_object_graph(obj, parents_first=False):
 
     if not parents_first:
         yield obj
     for base in getattr(obj, '__acl_bases__', ()):
-        for x in iter_graph(base, parents_first):
+        for x in iter_object_graph(base, parents_first):
             yield x
     if parents_first:
         yield obj
 
 
-def iter_aces(root):
+def iter_object_acl(root):
     """Child-first discovery of ACEs for an object.
 
     Walks the ACL graph via `__acl_bases__` and yields the ACEs parsed from
@@ -66,12 +74,12 @@ def iter_aces(root):
 
     """
 
-    for obj in iter_graph(root):
-        for ace in _iter_parse_acl(getattr(obj, '__acl__', ())):
+    for obj in iter_object_graph(root):
+        for ace in parse_acl(getattr(obj, '__acl__', ())):
             yield ace
 
 
-def get_context(root):
+def get_object_context(root):
     """Depth-first discovery of authentication context for an object.
 
     Walks the ACL graph via `__acl_bases__` and merges the `__acl_context__`
@@ -80,7 +88,7 @@ def get_context(root):
     """
 
     context = {}
-    for obj in iter_graph(root, parents_first=True):
+    for obj in iter_object_graph(root, parents_first=True):
         context.update(getattr(obj, '__acl_context__', {}))
     return context
 

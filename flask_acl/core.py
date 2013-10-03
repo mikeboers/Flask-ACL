@@ -10,18 +10,16 @@ import flask.globals
 from flask import request
 from flask.ext.login import current_user
 
-from . import acl
+from .acl import parse_acl, iter_object_acl, get_object_context
 from .permission import check_permission, default_permission_sets
 from .predicate import default_predicates
 
 log = logging.getLogger(__name__)
 
 
-
-
 def check(permission, raw_acl, **context):
     # log.debug('check for %r in %s' % (permission, pformat(context)))
-    for state, predicate, permission_set in acl._iter_parse_acl(raw_acl):
+    for state, predicate, permission_set in parse_acl(raw_acl):
         pred_match = predicate(**context)
         perm_match = check_permission(permission, permission_set)
         # log.debug('can %s %r(%s) %r%s' % (
@@ -107,9 +105,9 @@ class AuthManager(object):
         context = {'user': current_user}
         for func in self._context_processors:
             context.update(func())
-        context.update(acl.get_context(obj))
+        context.update(get_object_context(obj))
         context.update(kwargs)
-        return check(permission, acl.iter_aces(obj), **context)
+        return check(permission, iter_object_acl(obj), **context)
 
     def assert_can(self, permission, obj, **kwargs):
         """Make sure we have a permission, or abort the request.
@@ -160,5 +158,4 @@ class AuthManager(object):
             return False
 
         return self.can('http.' + (method or 'GET').lower(), view, **kwargs)
-
 

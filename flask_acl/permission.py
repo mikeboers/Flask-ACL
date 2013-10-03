@@ -4,16 +4,15 @@ from .globals import current_auth
 
 
 # Permissions
-class AllPermissions(object):
+class All(object):
     def __contains__(self, other):
         return True
     def __repr__(self):
-        return 'ANY'
+        return 'ALL'
 
    
 default_permission_sets = {
-    'ANY': AllPermissions(),
-    'ALL': AllPermissions(),
+    'ALL': All(),
     'http.get': set(('http.get', 'http.head', 'http.options')),
 }
 
@@ -28,7 +27,6 @@ def parse_permission_set(input):
 
 
 def check_permission(perm, perm_set):
-
     if isinstance(perm_set, basestring):
         return perm == perm_set
     elif isinstance(perm_set, Container):
@@ -36,4 +34,4 @@ def check_permission(perm, perm_set):
     elif isinstance(perm_set, Callable):
         return perm_set(perm)
     else:
-        raise TypeError('permission set is not string, container, or callable')
+        raise TypeError('permission set must be a string, container, or callable')
