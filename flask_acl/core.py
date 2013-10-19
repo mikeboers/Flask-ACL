@@ -50,6 +50,7 @@ class AuthManager(object):
     def init_app(self, app):
 
         app.auth_manager = self
+        app.extensions['acl'] = self
 
         # I suspect that Werkzeug has something for this already...
         app.errorhandler(_Redirect)(lambda r: flask.redirect(r.args[0]))
