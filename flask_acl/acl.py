@@ -1,7 +1,7 @@
 import re
 
-from .permission import parse_permission_set
-from .predicate import parse_predicate
+from flask_acl.permission import parse_permission_set
+from flask_acl.predicate import parse_predicate
 
 
 _state_strings = dict(

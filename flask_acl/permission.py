@@ -1,6 +1,6 @@
 from collections import Container, Callable
 
-from .globals import current_authz
+from flask_acl.globals import current_authz
 
 
 # Permissions

@@ -1,6 +1,6 @@
 from flask import request
 
-from .globals import current_authz
+from flask_acl.globals import current_authz
 
 
 def parse_predicate(input):
