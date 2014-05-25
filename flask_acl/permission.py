@@ -26,7 +26,7 @@ def parse_permission_set(input):
     return input
 
 
-def check_permission(perm, perm_set):
+def is_permission_in_set(perm, perm_set):
     if isinstance(perm_set, basestring):
         return perm == perm_set
     elif isinstance(perm_set, Container):

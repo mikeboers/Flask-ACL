@@ -3,3 +3,4 @@
 =========
 - Generally renamed "auth" to "authz" (to be more specific). This changes the
   name of the main Flask extendion to AuthzManager.
+- Many more (less public) API name changes in a quest for clarity.
