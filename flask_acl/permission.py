@@ -1,6 +1,6 @@
 from collections import Container, Callable
 
-from .globals import current_auth
+from .globals import current_authz
 
 
 # Permissions
@@ -20,7 +20,7 @@ default_permission_sets = {
 def parse_permission_set(input):
     if isinstance(input, basestring):
         try:
-            return current_auth.permission_sets[input]
+            return current_authz.permission_sets[input]
         except KeyError:
             raise ValueError('unknown permission set %r' % input)
     return input

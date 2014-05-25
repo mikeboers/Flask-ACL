@@ -36,7 +36,7 @@ class _Redirect(Exception):
     pass
 
 
-class AuthManager(object):
+class AuthzManager(object):
 
     login_view = 'login'
 
@@ -49,7 +49,7 @@ class AuthManager(object):
 
     def init_app(self, app):
 
-        app.auth_manager = self
+        app.authz_manager = self
         app.extensions['acl'] = self
 
         # I suspect that Werkzeug has something for this already...

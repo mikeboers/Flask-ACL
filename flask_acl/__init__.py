@@ -1,2 +1,2 @@
-from .core import AuthManager, check
-from .globals import current_auth
+from .core import AuthzManager, check
+from .globals import current_authz
