@@ -18,6 +18,11 @@ default_permission_sets = {
 
 
 def parse_permission_set(input):
+    """Lookup a permission set name in the defined permissions.
+
+    Requires a Flask app context.
+
+    """
     if isinstance(input, basestring):
         try:
             return current_acl_manager.permission_sets[input]
@@ -27,6 +32,15 @@ def parse_permission_set(input):
 
 
 def is_permission_in_set(perm, perm_set):
+    """Test if a permission is in the given set.
+
+    :param perm: The permission object to check for.
+    :param perm_set: The set to check in. If a ``str``, the permission is
+        checked for equality. If a container, the permission is looked for in
+        the set. If a function, the permission is passed to the "set".
+
+    """
+
     if isinstance(perm_set, basestring):
         return perm == perm_set
     elif isinstance(perm_set, Container):

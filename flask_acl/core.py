@@ -48,8 +48,8 @@ def iter_object_graph(obj, parents_first=False):
 def iter_object_acl(root):
     """Child-first discovery of ACEs for an object.
 
-    Walks the ACL graph via `__acl_bases__` and yields the ACEs parsed from
-    `__acl__` on each object.
+    Walks the ACL graph via ``__acl_bases__`` and yields the ACEs parsed from
+    ``__acl__`` on each object.
 
     """
 
@@ -61,7 +61,7 @@ def iter_object_acl(root):
 def get_object_context(root):
     """Depth-first discovery of authentication context for an object.
 
-    Walks the ACL graph via `__acl_bases__` and merges the `__acl_context__`
+    Walks the ACL graph via ``__acl_bases__`` and merges the ``__acl_context__``
     attributes.
 
     """

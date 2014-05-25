@@ -8,6 +8,11 @@
 - tests
 - write some examples
 
+- AuthxManager.route_acl could be enforced via a central view checker,
+  not by a wrapper, but this could be bypassed by other before_request handlers.
+  The current method can already be bypassed... I guess it is up to the user to
+  deal with those bypasses.
+
 - ACE parsing should be able to pick up arguments to predicates:
     "ALLOW ROLE('something') ANY" or
     "ALLOW ROLE.something ANY" or

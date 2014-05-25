@@ -8,11 +8,17 @@ def parse_state(state):
     """Convert a bool, or string, into a bool.
 
     The string pairs we respond to (case insensitively) are:
-        ALLOW & DENY
-        GRANT & REJECT
+    
+    - ALLOW & DENY
+    - GRANT & REJECT
 
     :returns bool: ``True`` or ``False``.
-    :raises ValueError: when not a bool or one of the given strings.
+    :raises ValueError: when not a ``bool`` or one of the above strings.
+
+    E.g.::
+
+        >>> parse_state('Allow')
+        True
 
     """
     if isinstance(state, bool):

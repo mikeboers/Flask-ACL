@@ -24,6 +24,8 @@ class _Redirect(Exception):
 
 class ACLManager(object):
 
+    """Flask extension for registration and checking of ACLs on routes and other objects."""
+
     login_view = 'login'
 
     def __init__(self, app=None):
@@ -47,7 +49,8 @@ class ACLManager(object):
     def predicate(self, name, predicate=None):
         """Define a new predicate (direclty, or as a decorator).
 
-        ::
+        E.g.::
+
             @authz.predicate
             def ROOT(user, **ctx):
                 # return True of user is in group "wheel".
@@ -77,7 +80,8 @@ class ACLManager(object):
     def route_acl(self, *acl, **options):
         """Decorator to attach an ACL to a route.
 
-        ::
+        E.g::
+        
             @app.route('/url/to/view')
             @authz.route_acl('''
                 ALLOW WHEEL ALL
