@@ -23,7 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Flask-ACL 1.0.0 documentation" href="#" /> 
+    <link rel="top" title="Flask-ACL 1.0.0 documentation" href="#" />
+    <link rel="next" title="Overview of ACLs" href="abstract.html" /> 
   </head>
   <body>
     <div class="related">
@@ -32,6 +33,12 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="abstract.html" title="Overview of ACLs"
+             accesskey="N">next</a> |</li>
         <li><a href="#">Flask-ACL 1.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -45,62 +52,82 @@
 <h1>Flask-ACL<a class="headerlink" href="#flask-acl" title="Permalink to this headline">¶</a></h1>
 <p><strong>Flask-ACL</strong> is a Python package which provides onfigurable access control lists for Flask.</p>
 <p>It is designed to allow for you to get started authorizing users immediately, but allows for a very high level of customization.</p>
-<div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>An access control list (ACL) is a list of access control elements (ACE). An ACE is a 3-tuple of:</p>
-<ol class="arabic simple">
-<li>whether to allow or deny the permission</li>
-<li>a predicate which determines if the ACE matches the authentication context;</li>
-<li>a set of permissions that this rule applies to.</li>
-</ol>
-<p>To determine if the current user has a given permission on a given object in a given context, we iterate through the ACEs in the ACL of the object, testing each to see if the predicate is true in the context and the requested permission is in those that the ACE applies to. If both those conditions are met, the requested permission is either allowed or denied, as determined by the rule.</p>
-<p>For example, an English version of an ACL may be:</p>
-<ul class="simple">
-<li>allow root any permission;</li>
-<li>allow group admins to write;</li>
-<li>allow group members to read;</li>
-<li>deny everyone any permission.</li>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p><strong>Flask-ACL</strong> can be installed from the PyPI:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install Flask-ACL
+</pre></div>
+</div>
+<p>At the very minimum, you must setup a <a class="reference external" href="https://flask-login.readthedocs.org/en/latest/">Login Manager</a>, <tt class="docutils literal"><span class="pre">SECRET_KEY</span></tt>, and <tt class="docutils literal"><span class="pre">login</span></tt> view:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">render_template</span>
+<span class="kn">from</span> <span class="nn">flask.ext.login</span> <span class="kn">import</span> <span class="n">LoginManager</span>
+<span class="kn">from</span> <span class="nn">flask.ext.acl</span> <span class="kn">import</span> <span class="n">ACLManager</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;SECRET_KEY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;monkey&#39;</span>
+<span class="n">authn</span> <span class="o">=</span> <span class="n">LoginManager</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">authz</span> <span class="o">=</span> <span class="n">ACLManager</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/login&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">login</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;login.html&#39;</span><span class="p">),</span> <span class="mi">401</span>
+</pre></div>
+</div>
+<p>Then you can start attaching ACLs to your routes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/users_area&#39;</span><span class="p">)</span>
+<span class="nd">@authz.route_acl</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">    ALLOW AUTHENTICATED http.get</span>
+<span class="s">    DENY ANY ALL</span>
+<span class="s">&#39;&#39;&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">users_area</span><span class="p">():</span>
+    <span class="c"># only authenticated users will get this far</span>
+</pre></div>
+</div>
+<p>You can also check for permissions on your models by defining an <tt class="docutils literal"><span class="pre">__acl__</span></tt> attribute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="n">__acl__</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">        ALLOW AUTHENTICATED ALL</span>
+<span class="s">        DENY ANY ALL</span>
+<span class="s">    &#39;&#39;&#39;</span>
+
+    <span class="c"># ...</span>
+
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/model/{id}&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">show_a_model</span><span class="p">(</span><span class="nb">id</span><span class="p">):</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">auths</span><span class="o">.</span><span class="n">can</span><span class="p">(</span><span class="s">&#39;read&#39;</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;mymodel.html&#39;</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="abstract.html">Overview of ACLs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="abstract.html#permission-sets">Permission Sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstract.html#predicates">Predicates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstract.html#access-control-elements">Access Control Elements</a></li>
 </ul>
-<p>That ACL could be represented by:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
-    <span class="p">(</span><span class="s">&#39;ALLOW&#39;</span><span class="p">,</span> <span class="n">Role</span><span class="p">(</span><span class="s">&#39;wheel&#39;</span><span class="p">),</span> <span class="n">AnyPermission</span><span class="p">),</span>
-    <span class="p">(</span><span class="s">&#39;ALLOW&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">user</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">members</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">is_admin</span><span class="p">,</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;write&#39;</span><span class="p">])),</span>
-    <span class="p">(</span><span class="s">&#39;ALLOW&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">user</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">members</span><span class="p">,</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;read&#39;</span><span class="p">])),</span>
-    <span class="p">(</span><span class="s">&#39;DENY&#39;</span><span class="p">,</span> <span class="n">Anyone</span><span class="p">,</span> <span class="n">AnyPermission</span><span class="p">),</span>
-<span class="p">]</span>
-</pre></div>
-</div>
-<div class="section" id="permission-sets">
-<h3>Permission Sets<a class="headerlink" href="#permission-sets" title="Permalink to this headline">¶</a></h3>
-<p>A &#8220;permission&#8221; is a single object that represents an action that a user may want to take. This can be a string, tuple, anyting, but usually I use strings such as <tt class="docutils literal"><span class="pre">&quot;group.read&quot;</span></tt> and <tt class="docutils literal"><span class="pre">&quot;group.write&quot;</span></tt>.</p>
-<p>A &#8220;permission set&#8221; may be a single string, a collection, or a callable.</p>
-<p>If a string, a permission is in the permission set if <tt class="docutils literal"><span class="pre">permission</span> <span class="pre">==</span> <span class="pre">permission-set</span></tt>.</p>
-<p>If a collection (e.g. <tt class="docutils literal"><span class="pre">set</span></tt>, <tt class="docutils literal"><span class="pre">tuple</span></tt>, <tt class="docutils literal"><span class="pre">list</span></tt>), a permission is in the permission set if <tt class="docutils literal"><span class="pre">permission</span> <span class="pre">in</span> <span class="pre">permission_set</span></tt>.</p>
-<p>If a callable, a permission is in the permission set if <tt class="docutils literal"><span class="pre">permission_set(permission)</span></tt>.</p>
-</div>
-<div class="section" id="predicates">
-<h3>Predicates<a class="headerlink" href="#predicates" title="Permalink to this headline">¶</a></h3>
-<p>A &#8220;predicate&#8221; is a test against the authentication context, and returns a truth value. These are implemented as callables that take the context as keyword arguments.</p>
-<p>Several predefined predicates check for authenticated users, local users, anonymouse users, or if a user has a given principal (e.g. email or username).</p>
-</div>
-<div class="section" id="access-control-elements">
-<h3>Access Control Elements<a class="headerlink" href="#access-control-elements" title="Permalink to this headline">¶</a></h3>
-<p>An ACE is a tuple of a truth value, a predicate, and a permission set. If the predicate matches, and the permission of interest is in the permission set, the truth value determines if the user is allowed to perform that action.</p>
-<p>E.g.: <tt class="docutils literal"><span class="pre">(Allow,</span> <span class="pre">ANY,</span> <span class="pre">'read')</span></tt> will allow anyone to <tt class="docutils literal"><span class="pre">'read'</span></tt> an object.</p>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="protocol.html">Python Protocol</a></li>
+</ul>
 </div>
 </div>
-<div class="section" id="protocol">
-<h2>Protocol<a class="headerlink" href="#protocol" title="Permalink to this headline">¶</a></h2>
-<p>Define ACLs on objects via an <tt class="docutils literal"><span class="pre">__acl__</span></tt> attribute. This value MUST be either a string, an interator of ACE strings, or an iterator of ACE tuples. If you provide ACE tuples permission set will not be interpreted any further, and will be used as-is.</p>
-<p>Inherit ACLs from base objects via a iterable <tt class="docutils literal"><span class="pre">__acl_bases__</span></tt> attribute, which is a sequence of other objects to look for an <tt class="docutils literal"><span class="pre">__acl__</span></tt> on.</p>
-<p>ACEs from the combined ACL will be checked for a requested permission in a given context.</p>
-<p>If you wish to build your own ACL inheritance mechanism, you MUST be sure to parse ACL strings into an ACE iterator using <tt class="docutils literal"><span class="pre">flask.ext.acl.core.iter_aces(acl)</span></tt>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span><span class="o">.</span><span class="n">__acl__</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
-<span class="s">    Allow ANY read</span>
-<span class="s">    Deny  ANY ANY</span>
-<span class="s">&#39;&#39;&#39;</span>
-<span class="n">check_permission</span><span class="p">(</span><span class="s">&#39;read&#39;</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">context</span><span class="p">)</span>
-</pre></div>
+<div class="section" id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/core.html">Core API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/extension.html">Extension API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/globals.html">Globals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/permission.html">Permission API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/predicate.html">Predicate API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/state.html">State API</a></li>
+</ul>
 </div>
 </div>
 </div>
@@ -122,18 +149,17 @@
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Flask-ACL</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a><ul>
-<li><a class="reference internal" href="#permission-sets">Permission Sets</a></li>
-<li><a class="reference internal" href="#predicates">Predicates</a></li>
-<li><a class="reference internal" href="#access-control-elements">Access Control Elements</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#protocol">Protocol</a></li>
+<li><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#api-reference">API Reference</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 
+  <h4>Next topic</h4>
+  <p class="topless"><a href="abstract.html"
+                        title="next chapter">Overview of ACLs</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/index.txt"
@@ -162,6 +188,12 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="abstract.html" title="Overview of ACLs"
+             >next</a> |</li>
         <li><a href="#">Flask-ACL 1.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>

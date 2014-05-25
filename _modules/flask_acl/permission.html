@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>flask_acl.permission &mdash; Flask-ACL 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Flask-ACL 1.0.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Flask-ACL 1.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for flask_acl.permission</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Callable</span>
+
+<span class="kn">from</span> <span class="nn">flask_acl.globals</span> <span class="kn">import</span> <span class="n">current_acl_manager</span>
+
+
+<span class="c"># Permissions</span>
+<span class="k">class</span> <span class="nc">All</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;ALL&#39;</span>
+
+   
+<span class="n">default_permission_sets</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;ALL&#39;</span><span class="p">:</span> <span class="n">All</span><span class="p">(),</span>
+    <span class="s">&#39;http.get&#39;</span><span class="p">:</span> <span class="nb">set</span><span class="p">((</span><span class="s">&#39;http.get&#39;</span><span class="p">,</span> <span class="s">&#39;http.head&#39;</span><span class="p">,</span> <span class="s">&#39;http.options&#39;</span><span class="p">)),</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="parse_permission_set"><a class="viewcode-back" href="../../api/permission.html#flask_acl.permission.parse_permission_set">[docs]</a><span class="k">def</span> <span class="nf">parse_permission_set</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Lookup a permission set name in the defined permissions.</span>
+
+<span class="sd">    Requires a Flask app context.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">current_acl_manager</span><span class="o">.</span><span class="n">permission_sets</span><span class="p">[</span><span class="nb">input</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;unknown permission set </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">input</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">input</span>
+
+</div>
+<div class="viewcode-block" id="is_permission_in_set"><a class="viewcode-back" href="../../api/permission.html#flask_acl.permission.is_permission_in_set">[docs]</a><span class="k">def</span> <span class="nf">is_permission_in_set</span><span class="p">(</span><span class="n">perm</span><span class="p">,</span> <span class="n">perm_set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test if a permission is in the given set.</span>
+
+<span class="sd">    :param perm: The permission object to check for.</span>
+<span class="sd">    :param perm_set: The set to check in. If a ``str``, the permission is</span>
+<span class="sd">        checked for equality. If a container, the permission is looked for in</span>
+<span class="sd">        the set. If a function, the permission is passed to the &quot;set&quot;.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">perm_set</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">perm</span> <span class="o">==</span> <span class="n">perm_set</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">perm_set</span><span class="p">,</span> <span class="n">Container</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">perm</span> <span class="ow">in</span> <span class="n">perm_set</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">perm_set</span><span class="p">,</span> <span class="n">Callable</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">perm_set</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;permission set must be a string, container, or callable&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Flask-ACL 1.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

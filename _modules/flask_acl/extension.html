@@ -1,0 +1,273 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>flask_acl.extension &mdash; Flask-ACL 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Flask-ACL 1.0.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Flask-ACL 1.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for flask_acl.extension</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+<span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">urlencode</span>
+
+<span class="kn">import</span> <span class="nn">flask</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">request</span><span class="p">,</span> <span class="n">current_app</span>
+<span class="kn">from</span> <span class="nn">flask.ext.login</span> <span class="kn">import</span> <span class="n">current_user</span>
+<span class="kn">import</span> <span class="nn">werkzeug</span> <span class="kn">as</span> <span class="nn">wz</span>
+
+<span class="kn">from</span> <span class="nn">flask_acl.core</span> <span class="kn">import</span> <span class="n">iter_object_acl</span><span class="p">,</span> <span class="n">get_object_context</span><span class="p">,</span> <span class="n">check</span>
+<span class="kn">from</span> <span class="nn">flask_acl.permission</span> <span class="kn">import</span> <span class="n">default_permission_sets</span>
+<span class="kn">from</span> <span class="nn">flask_acl.predicate</span> <span class="kn">import</span> <span class="n">default_predicates</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_Redirect</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="ACLManager"><a class="viewcode-back" href="../../api/extension.html#flask_acl.extension.ACLManager">[docs]</a><span class="k">class</span> <span class="nc">ACLManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Flask extension for registration and checking of ACLs on routes and other objects.&quot;&quot;&quot;</span>
+
+    <span class="n">login_view</span> <span class="o">=</span> <span class="s">&#39;login&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context_processors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">permission_sets</span> <span class="o">=</span> <span class="n">default_permission_sets</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predicates</span> <span class="o">=</span> <span class="n">default_predicates</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">app</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">init_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+
+        <span class="n">app</span><span class="o">.</span><span class="n">acl_manager</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">extensions</span><span class="p">[</span><span class="s">&#39;acl&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;ACL_ROUTE_DEFAULT_STATE&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+
+        <span class="c"># I suspect that Werkzeug has something for this already...</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="n">_Redirect</span><span class="p">)(</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">flask</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+
+<div class="viewcode-block" id="ACLManager.predicate"><a class="viewcode-back" href="../../api/extension.html#flask_acl.extension.ACLManager.predicate">[docs]</a>    <span class="k">def</span> <span class="nf">predicate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Define a new predicate (direclty, or as a decorator).</span>
+
+<span class="sd">        E.g.::</span>
+
+<span class="sd">            @authz.predicate</span>
+<span class="sd">            def ROOT(user, **ctx):</span>
+<span class="sd">                # return True of user is in group &quot;wheel&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">predicate</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predicate</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predicates</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicate</span>
+        <span class="k">return</span> <span class="n">predicate</span>
+</div>
+<div class="viewcode-block" id="ACLManager.permission_set"><a class="viewcode-back" href="../../api/extension.html#flask_acl.extension.ACLManager.permission_set">[docs]</a>    <span class="k">def</span> <span class="nf">permission_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">permission_set</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Define a new permission set (directly, or as a decorator).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">permission_set</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">permission_set</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">permission_sets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">permission_set</span>
+        <span class="k">return</span> <span class="n">permission_set</span>
+
+</div>
+<div class="viewcode-block" id="ACLManager.context_processor"><a class="viewcode-back" href="../../api/extension.html#flask_acl.extension.ACLManager.context_processor">[docs]</a>    <span class="k">def</span> <span class="nf">context_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Register a function to build authorization contexts.</span>
+
+<span class="sd">        The function is called with no arguments, and must return a dict of new</span>
+<span class="sd">        context material.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context_processors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ACLManager.route_acl"><a class="viewcode-back" href="../../api/extension.html#flask_acl.extension.ACLManager.route_acl">[docs]</a>    <span class="k">def</span> <span class="nf">route_acl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">acl</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decorator to attach an ACL to a route.</span>
+
+<span class="sd">        E.g::</span>
+<span class="sd">        </span>
+<span class="sd">            @app.route(&#39;/url/to/view&#39;)</span>
+<span class="sd">            @authz.route_acl(&#39;&#39;&#39;</span>
+<span class="sd">                ALLOW WHEEL ALL</span>
+<span class="sd">                DENY  ANY   ALL</span>
+<span class="sd">            &#39;&#39;&#39;)</span>
+<span class="sd">            def my_admin_function():</span>
+<span class="sd">                pass</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_route_acl</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+
+            <span class="n">func</span><span class="o">.</span><span class="n">__acl__</span> <span class="o">=</span> <span class="n">acl</span>
+
+            <span class="nd">@functools.wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">wrapped</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="n">permission</span> <span class="o">=</span> <span class="s">&#39;http.&#39;</span> <span class="o">+</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="n">local_opts</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">local_opts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;default&#39;</span><span class="p">,</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;ACL_ROUTE_DEFAULT_STATE&#39;</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assert_can</span><span class="p">(</span><span class="n">permission</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="o">**</span><span class="n">local_opts</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">wrapped</span>
+        <span class="k">return</span> <span class="n">_route_acl</span>
+</div>
+<div class="viewcode-block" id="ACLManager.can"><a class="viewcode-back" href="../../api/extension.html#flask_acl.extension.ACLManager.can">[docs]</a>    <span class="k">def</span> <span class="nf">can</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">permission</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if we can do something with an object.</span>
+
+<span class="sd">        :param permission: The permission to look for.</span>
+<span class="sd">        :param obj: The object to check the ACL of.</span>
+<span class="sd">        :param **kwargs: The context to pass to predicates.</span>
+
+<span class="sd">        &gt;&gt;&gt; auth.can(&#39;read&#39;, some_object)</span>
+<span class="sd">        &gt;&gt;&gt; auth.can(&#39;write&#39;, another_object, group=some_group)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;user&#39;</span><span class="p">:</span> <span class="n">current_user</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_processors</span><span class="p">:</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">func</span><span class="p">())</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">get_object_context</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">check</span><span class="p">(</span><span class="n">permission</span><span class="p">,</span> <span class="n">iter_object_acl</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="o">**</span><span class="n">context</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ACLManager.assert_can"><a class="viewcode-back" href="../../api/extension.html#flask_acl.extension.ACLManager.assert_can">[docs]</a>    <span class="k">def</span> <span class="nf">assert_can</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">permission</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make sure we have a permission, or abort the request.</span>
+
+<span class="sd">        :param permission: The permission to look for.</span>
+<span class="sd">        :param obj: The object to check the ACL of.</span>
+<span class="sd">        :param flash: The message to flask if denied (keyword only).</span>
+<span class="sd">        :param stealth: Abort with a 404? (keyword only).</span>
+<span class="sd">        :param **kwargs: The context to pass to predicates.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flash_message</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;flash&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">stealth</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;stealth&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="n">default</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;default&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">can</span><span class="p">(</span><span class="n">permission</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">default</span> <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">res</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">flash_message</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">stealth</span><span class="p">:</span>
+                <span class="n">flask</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="n">flash_message</span><span class="p">,</span> <span class="s">&#39;danger&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">current_user</span><span class="o">.</span><span class="n">is_authenticated</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">flash_message</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>
+                    <span class="n">flask</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="n">flash_message</span> <span class="ow">or</span> <span class="s">&#39;You are not permitted to &quot;</span><span class="si">%s</span><span class="s">&quot; this resource&#39;</span> <span class="o">%</span> <span class="n">permission</span><span class="p">)</span>
+                <span class="n">flask</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="mi">403</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">stealth</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">login_view</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">flash_message</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>
+                    <span class="n">flask</span><span class="o">.</span><span class="n">flash</span><span class="p">(</span><span class="n">flash_message</span> <span class="ow">or</span> <span class="s">&#39;Please login for access.&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">_Redirect</span><span class="p">(</span><span class="n">flask</span><span class="o">.</span><span class="n">url_for</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">login_view</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;?&#39;</span> <span class="o">+</span> <span class="n">urlencode</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">next</span><span class="o">=</span>
+                    <span class="n">flask</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">script_root</span> <span class="o">+</span> <span class="n">flask</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">path</span>
+                <span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">flask</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ACLManager.can_route"><a class="viewcode-back" href="../../api/extension.html#flask_acl.extension.ACLManager.can_route">[docs]</a>    <span class="k">def</span> <span class="nf">can_route</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make sure we can route to the given endpoint or url.</span>
+
+<span class="sd">        This checks for `http.get` permission (or other methods) on the ACL of</span>
+<span class="sd">        route functions, attached via the `ACL` decorator.</span>
+
+<span class="sd">        :param endpoint: A URL or endpoint to check for permission to access.</span>
+<span class="sd">        :param method: The HTTP method to check; defaults to `&#39;GET&#39;`.</span>
+<span class="sd">        :param **kwargs: The context to pass to predicates.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">view</span> <span class="o">=</span> <span class="n">flask</span><span class="o">.</span><span class="n">current_app</span><span class="o">.</span><span class="n">view_functions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">view</span><span class="p">:</span>
+            <span class="n">endpoint</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">flask</span><span class="o">.</span><span class="n">_request_ctx</span><span class="o">.</span><span class="n">top</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+            <span class="n">view</span> <span class="o">=</span> <span class="n">flask</span><span class="o">.</span><span class="n">current_app</span><span class="o">.</span><span class="n">view_functions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">view</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">can</span><span class="p">(</span><span class="s">&#39;http.&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="n">method</span> <span class="ow">or</span> <span class="s">&#39;GET&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">view</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Flask-ACL 1.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

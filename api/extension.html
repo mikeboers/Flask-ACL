@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Extension API &mdash; Flask-ACL 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Flask-ACL 1.0.0 documentation" href="../index.html" />
+    <link rel="next" title="Globals" href="globals.html" />
+    <link rel="prev" title="Core API" href="core.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="globals.html" title="Globals"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="core.html" title="Core API"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Flask-ACL 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-flask_acl.extension">
+<span id="extension-api"></span><h1>Extension API<a class="headerlink" href="#module-flask_acl.extension" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="flask_acl.extension.ACLManager">
+<em class="property">class </em><tt class="descclassname">flask_acl.extension.</tt><tt class="descname">ACLManager</tt><big>(</big><em>app=None</em><big>)</big><a class="reference internal" href="../_modules/flask_acl/extension.html#ACLManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_acl.extension.ACLManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flask extension for registration and checking of ACLs on routes and other objects.</p>
+<dl class="method">
+<dt id="flask_acl.extension.ACLManager.assert_can">
+<tt class="descname">assert_can</tt><big>(</big><em>permission</em>, <em>obj</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/flask_acl/extension.html#ACLManager.assert_can"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_acl.extension.ACLManager.assert_can" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure we have a permission, or abort the request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>permission</strong> &#8211; The permission to look for.</li>
+<li><strong>obj</strong> &#8211; The object to check the ACL of.</li>
+<li><strong>flash</strong> &#8211; The message to flask if denied (keyword only).</li>
+<li><strong>stealth</strong> &#8211; Abort with a 404? (keyword only).</li>
+<li><strong>**kwargs</strong> &#8211; <p>The context to pass to predicates.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_acl.extension.ACLManager.can">
+<tt class="descname">can</tt><big>(</big><em>permission</em>, <em>obj</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/flask_acl/extension.html#ACLManager.can"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_acl.extension.ACLManager.can" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if we can do something with an object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>permission</strong> &#8211; The permission to look for.</li>
+<li><strong>obj</strong> &#8211; The object to check the ACL of.</li>
+<li><strong>**kwargs</strong> &#8211; <p>The context to pass to predicates.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">auth</span><span class="o">.</span><span class="n">can</span><span class="p">(</span><span class="s">&#39;read&#39;</span><span class="p">,</span> <span class="n">some_object</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">auth</span><span class="o">.</span><span class="n">can</span><span class="p">(</span><span class="s">&#39;write&#39;</span><span class="p">,</span> <span class="n">another_object</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">some_group</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_acl.extension.ACLManager.can_route">
+<tt class="descname">can_route</tt><big>(</big><em>endpoint</em>, <em>method=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/flask_acl/extension.html#ACLManager.can_route"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_acl.extension.ACLManager.can_route" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure we can route to the given endpoint or url.</p>
+<p>This checks for <cite>http.get</cite> permission (or other methods) on the ACL of
+route functions, attached via the <cite>ACL</cite> decorator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>endpoint</strong> &#8211; A URL or endpoint to check for permission to access.</li>
+<li><strong>method</strong> &#8211; The HTTP method to check; defaults to <cite>&#8216;GET&#8217;</cite>.</li>
+<li><strong>**kwargs</strong> &#8211; <p>The context to pass to predicates.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_acl.extension.ACLManager.context_processor">
+<tt class="descname">context_processor</tt><big>(</big><em>func</em><big>)</big><a class="reference internal" href="../_modules/flask_acl/extension.html#ACLManager.context_processor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_acl.extension.ACLManager.context_processor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a function to build authorization contexts.</p>
+<p>The function is called with no arguments, and must return a dict of new
+context material.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_acl.extension.ACLManager.permission_set">
+<tt class="descname">permission_set</tt><big>(</big><em>name</em>, <em>permission_set=None</em><big>)</big><a class="reference internal" href="../_modules/flask_acl/extension.html#ACLManager.permission_set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_acl.extension.ACLManager.permission_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define a new permission set (directly, or as a decorator).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_acl.extension.ACLManager.predicate">
+<tt class="descname">predicate</tt><big>(</big><em>name</em>, <em>predicate=None</em><big>)</big><a class="reference internal" href="../_modules/flask_acl/extension.html#ACLManager.predicate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_acl.extension.ACLManager.predicate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define a new predicate (direclty, or as a decorator).</p>
+<p>E.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre>@authz.predicate
+def ROOT(user, **ctx):
+    # return True of user is in group &quot;wheel&quot;.
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_acl.extension.ACLManager.route_acl">
+<tt class="descname">route_acl</tt><big>(</big><em>*acl</em>, <em>**options</em><big>)</big><a class="reference internal" href="../_modules/flask_acl/extension.html#ACLManager.route_acl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_acl.extension.ACLManager.route_acl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to attach an ACL to a route.</p>
+<p>E.g:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/url/to/view&#39;</span><span class="p">)</span>
+<span class="nd">@authz.route_acl</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">    ALLOW WHEEL ALL</span>
+<span class="s">    DENY  ANY   ALL</span>
+<span class="s">&#39;&#39;&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_admin_function</span><span class="p">():</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="core.html"
+                        title="previous chapter">Core API</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="globals.html"
+                        title="next chapter">Globals</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/extension.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="globals.html" title="Globals"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="core.html" title="Core API"
+             >previous</a> |</li>
+        <li><a href="../index.html">Flask-ACL 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

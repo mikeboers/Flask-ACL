@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Overview of ACLs &mdash; Flask-ACL 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Flask-ACL 1.0.0 documentation" href="index.html" />
+    <link rel="next" title="Python Protocol" href="protocol.html" />
+    <link rel="prev" title="Flask-ACL" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="protocol.html" title="Python Protocol"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Flask-ACL"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Flask-ACL 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="overview-of-acls">
+<h1>Overview of ACLs<a class="headerlink" href="#overview-of-acls" title="Permalink to this headline">¶</a></h1>
+<p>An access control list (ACL) is a list of access control elements (ACE). An ACE is a 3-tuple of:</p>
+<ol class="arabic simple">
+<li>whether to allow or deny the permission</li>
+<li>a predicate which determines if the ACE matches the authentication context;</li>
+<li>a set of permissions that this rule applies to.</li>
+</ol>
+<p>To determine if the current user has a given permission on a given object in a given context, we iterate through the ACEs in the ACL of the object, testing each to see if the predicate is true in the context and the requested permission is in those that the ACE applies to. If both those conditions are met, the requested permission is either allowed or denied, as determined by the rule.</p>
+<p>For example, an English version of an ACL may be:</p>
+<ul class="simple">
+<li>allow root any permission;</li>
+<li>allow group admins to write;</li>
+<li>allow group members to read;</li>
+<li>deny everyone any permission.</li>
+</ul>
+<p>That ACL could be represented by:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+    <span class="p">(</span><span class="s">&#39;ALLOW&#39;</span><span class="p">,</span> <span class="n">Role</span><span class="p">(</span><span class="s">&#39;wheel&#39;</span><span class="p">),</span> <span class="n">AnyPermission</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;ALLOW&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">user</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">members</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">is_admin</span><span class="p">,</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;write&#39;</span><span class="p">])),</span>
+    <span class="p">(</span><span class="s">&#39;ALLOW&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">user</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">members</span><span class="p">,</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;read&#39;</span><span class="p">])),</span>
+    <span class="p">(</span><span class="s">&#39;DENY&#39;</span><span class="p">,</span> <span class="n">Anyone</span><span class="p">,</span> <span class="n">AnyPermission</span><span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="permission-sets">
+<h2>Permission Sets<a class="headerlink" href="#permission-sets" title="Permalink to this headline">¶</a></h2>
+<p>A &#8220;permission&#8221; is a single object that represents an action that a user may want to take. This can be a string, tuple, anyting, but usually I use strings such as <tt class="docutils literal"><span class="pre">&quot;group.read&quot;</span></tt> and <tt class="docutils literal"><span class="pre">&quot;group.write&quot;</span></tt>.</p>
+<p>A &#8220;permission set&#8221; may be a single string, a collection, or a callable.</p>
+<p>If a string, a permission is in the permission set if <tt class="docutils literal"><span class="pre">permission</span> <span class="pre">==</span> <span class="pre">permission-set</span></tt>.</p>
+<p>If a collection (e.g. <tt class="docutils literal"><span class="pre">set</span></tt>, <tt class="docutils literal"><span class="pre">tuple</span></tt>, <tt class="docutils literal"><span class="pre">list</span></tt>), a permission is in the permission set if <tt class="docutils literal"><span class="pre">permission</span> <span class="pre">in</span> <span class="pre">permission_set</span></tt>.</p>
+<p>If a callable, a permission is in the permission set if <tt class="docutils literal"><span class="pre">permission_set(permission)</span></tt>.</p>
+</div>
+<div class="section" id="predicates">
+<h2>Predicates<a class="headerlink" href="#predicates" title="Permalink to this headline">¶</a></h2>
+<p>A &#8220;predicate&#8221; is a test against the authentication context, and returns a truth value. These are implemented as callables that take the context as keyword arguments.</p>
+<p>Several predefined predicates check for authenticated users, local users, anonymouse users, or if a user has a given principal (e.g. email or username).</p>
+</div>
+<div class="section" id="access-control-elements">
+<h2>Access Control Elements<a class="headerlink" href="#access-control-elements" title="Permalink to this headline">¶</a></h2>
+<p>An ACE is a tuple of a truth value, a predicate, and a permission set. If the predicate matches, and the permission of interest is in the permission set, the truth value determines if the user is allowed to perform that action.</p>
+<p>E.g.: <tt class="docutils literal"><span class="pre">(Allow,</span> <span class="pre">ANY,</span> <span class="pre">'read')</span></tt> will allow anyone to <tt class="docutils literal"><span class="pre">'read'</span></tt> an object.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Overview of ACLs</a><ul>
+<li><a class="reference internal" href="#permission-sets">Permission Sets</a></li>
+<li><a class="reference internal" href="#predicates">Predicates</a></li>
+<li><a class="reference internal" href="#access-control-elements">Access Control Elements</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Flask-ACL</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="protocol.html"
+                        title="next chapter">Python Protocol</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/abstract.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="protocol.html" title="Python Protocol"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Flask-ACL"
+             >previous</a> |</li>
+        <li><a href="index.html">Flask-ACL 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
