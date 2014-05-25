@@ -1,6 +1,6 @@
 from collections import Container, Callable
 
-from flask_acl.globals import current_authz
+from flask_acl.globals import current_acl_manager
 
 
 # Permissions
@@ -20,7 +20,7 @@ default_permission_sets = {
 def parse_permission_set(input):
     if isinstance(input, basestring):
         try:
-            return current_authz.permission_sets[input]
+            return current_acl_manager.permission_sets[input]
         except KeyError:
             raise ValueError('unknown permission set %r' % input)
     return input

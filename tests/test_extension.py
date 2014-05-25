@@ -1,16 +1,16 @@
 from . import *
 
-from flask_acl.globals import current_authz
+from flask_acl.globals import current_acl_manager
 
 
 class TestExtension(FlaskTestCase):
 
     def test_app_registry(self):
-        self.assertIs(self.flask.authz_manager, self.authz)
+        self.assertIs(self.flask.acl_manager, self.authz)
 
-    def test_current_authz(self):
+    def test_current_acl_manager(self):
         with self.flask.test_request_context('/'):
-            self.assertIs(current_authz._get_current_object(), self.authz)
+            self.assertIs(current_acl_manager._get_current_object(), self.authz)
 
     def test_route_default(self):
         @self.flask.route('/default_allow')

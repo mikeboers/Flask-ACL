@@ -1,6 +1,5 @@
 
 1.0.0-dev
 =========
-- Generally renamed "auth" to "authz" (to be more specific). This changes the
-  name of the main Flask extendion to AuthzManager.
+- Extension class is now ACLManager, as AuthManager assumes too much.
 - Many more (less public) API name changes in a quest for clarity.

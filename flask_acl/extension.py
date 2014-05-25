@@ -22,7 +22,7 @@ class _Redirect(Exception):
     pass
 
 
-class AuthzManager(object):
+class ACLManager(object):
 
     login_view = 'login'
 
@@ -35,7 +35,7 @@ class AuthzManager(object):
 
     def init_app(self, app):
 
-        app.authz_manager = self
+        app.acl_manager = self
         app.extensions['acl'] = self
 
         app.config.setdefault('ACL_ROUTE_DEFAULT_STATE', True)

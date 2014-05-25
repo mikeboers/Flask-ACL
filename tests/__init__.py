@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from flask.ext.acl import AuthzManager
+from flask.ext.acl import ACLManager
 from flask.ext.login import LoginManager
 from flask import Flask
 
@@ -11,8 +11,8 @@ class FlaskTestCase(TestCase):
 
         self.flask = Flask('tests')
         self.flask.config['SECRET_KEY'] = 'deadbeef'
-        self.login = LoginManager(self.flask)
-        self.authz = AuthzManager(self.flask)
+        self.authn = LoginManager(self.flask)
+        self.authz = ACLManager(self.flask)
         self.client = self.flask.test_client()
 
         @self.flask.route('/login')

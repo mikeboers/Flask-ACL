@@ -1,6 +1,6 @@
 from flask import request
 
-from flask_acl.globals import current_authz
+from flask_acl.globals import current_acl_manager
 
 
 def parse_predicate(input):
@@ -9,7 +9,7 @@ def parse_predicate(input):
         negate = input.startswith('!')
         if negate:
             input = input[1:]
-        predicate = current_authz.predicates.get(input)
+        predicate = current_acl_manager.predicates.get(input)
         if not predicate:
             raise ValueError('unknown predicate: %r' % input)
         if negate:
