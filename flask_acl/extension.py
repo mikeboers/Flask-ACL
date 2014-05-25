@@ -9,8 +9,7 @@ from flask import request
 from flask.ext.login import current_user
 import werkzeug as wz
 
-from flask_acl.acl import iter_object_acl, get_object_context
-from flask_acl.core import check
+from flask_acl.core import iter_object_acl, get_object_context, check
 from flask_acl.permission import default_permission_sets
 from flask_acl.predicate import default_predicates
 
