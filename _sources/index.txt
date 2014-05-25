@@ -1,18 +1,13 @@
 Flask-ACL
 =========
 
-**Flask-ACL** is a Python package which provides onfigurable access control lists for Flask.
+**Flask-ACL** is a Python package which provides configurable access control lists for Flask.
 
 It is designed to allow for you to get started authorizing users immediately, but allows for a very high level of customization.
 
 
 Getting Started
 ---------------
-
-**Flask-ACL** can be installed from the PyPI::
-
-    $ pip install Flask-ACL
-
 
 At the very minimum, you must setup a `Login Manager <https://flask-login.readthedocs.org/en/latest/>`_, ``SECRET_KEY``, and ``login`` view::
 

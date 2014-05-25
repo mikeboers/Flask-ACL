@@ -59,14 +59,10 @@
             
   <div class="section" id="flask-acl">
 <h1>Flask-ACL<a class="headerlink" href="#flask-acl" title="Permalink to this headline">¶</a></h1>
-<p><strong>Flask-ACL</strong> is a Python package which provides onfigurable access control lists for Flask.</p>
+<p><strong>Flask-ACL</strong> is a Python package which provides configurable access control lists for Flask.</p>
 <p>It is designed to allow for you to get started authorizing users immediately, but allows for a very high level of customization.</p>
 <div class="section" id="getting-started">
 <h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
-<p><strong>Flask-ACL</strong> can be installed from the PyPI:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ pip install Flask-ACL
-</pre></div>
-</div>
 <p>At the very minimum, you must setup a <a class="reference external" href="https://flask-login.readthedocs.org/en/latest/">Login Manager</a>, <tt class="docutils literal"><span class="pre">SECRET_KEY</span></tt>, and <tt class="docutils literal"><span class="pre">login</span></tt> view:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">render_template</span>
 <span class="kn">from</span> <span class="nn">flask.ext.login</span> <span class="kn">import</span> <span class="n">LoginManager</span>
