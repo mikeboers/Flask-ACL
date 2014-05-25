@@ -6,7 +6,7 @@ from pprint import pformat
 from urllib import urlencode
 
 import flask
-from flask import request
+from flask import request, current_app
 from flask.ext.login import current_user
 import werkzeug as wz
 
@@ -38,8 +38,11 @@ class AuthzManager(object):
         app.authz_manager = self
         app.extensions['acl'] = self
 
+        app.config.setdefault('ACL_ROUTE_DEFAULT_STATE', True)
+
         # I suspect that Werkzeug has something for this already...
         app.errorhandler(_Redirect)(lambda r: flask.redirect(r.args[0]))
+
 
     def predicate(self, name, predicate=None):
         """Define a new predicate (direclty, or as a decorator).
@@ -92,7 +95,9 @@ class AuthzManager(object):
             @functools.wraps(func)
             def wrapped(*args, **kwargs):
                 permission = 'http.' + request.method.lower()
-                self.assert_can(permission, func, **options)
+                local_opts = options.copy()
+                local_opts.setdefault('default', current_app.config['ACL_ROUTE_DEFAULT_STATE'])
+                self.assert_can(permission, func, **local_opts)
                 return func(*args, **kwargs)
 
             return wrapped
@@ -129,8 +134,12 @@ class AuthzManager(object):
         """
         flash_message = kwargs.pop('flash', None)
         stealth = kwargs.pop('stealth', False)
+        default = kwargs.pop('default', None)
 
-        if not self.can(permission, obj, **kwargs):
+        res = self.can(permission, obj, **kwargs)
+        res = default if res is None else res
+
+        if not res:
             if flash_message and not stealth:
                 flask.flash(flash_message, 'danger')
             if current_user.is_authenticated():
