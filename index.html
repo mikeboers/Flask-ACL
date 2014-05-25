@@ -98,7 +98,7 @@
 
     <span class="c"># ...</span>
 
-<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/model/{id}&#39;</span><span class="p">)</span>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/model/&lt;id&gt;&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">show_a_model</span><span class="p">(</span><span class="nb">id</span><span class="p">):</span>
     <span class="n">obj</span> <span class="o">=</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">auths</span><span class="o">.</span><span class="n">can</span><span class="p">(</span><span class="s">&#39;read&#39;</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
