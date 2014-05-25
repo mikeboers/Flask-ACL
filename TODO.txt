@@ -1,4 +1,7 @@
 
+- docs
+- tests
+
 - ACE parsing should be able to pick up arguments to predicates:
     "ALLOW ROLE('something') ANY" or
     "ALLOW ROLE.something ANY" or
