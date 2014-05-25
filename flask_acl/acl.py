@@ -2,28 +2,7 @@ import re
 
 from flask_acl.permission import parse_permission_set
 from flask_acl.predicate import parse_predicate
-
-
-_state_strings = dict(
-    allow=True,
-    grant=True,
-    deny=False,
-)
-
-
-def parse_state(state):
-    """Turn a bool, or string, into a bool.
-
-    Rules:
-        'Allow' -> True
-        'Grant' -> True
-        'Deny' -> False
-
-    """
-    if isinstance(state, bool):
-        return state
-    state = str(state).lower()
-    return _state_strings[state]
+from flask_acl.state import parse_state
 
 
 def parse_acl(acl_iter):
