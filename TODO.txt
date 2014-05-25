@@ -1,6 +1,12 @@
 
 - docs
+    - minumum requirements:
+        - flask.ext.login.LoginManager
+        - a "login" entrypoint
+        - a SECRET_KEY
+
 - tests
+- write some examples
 
 - ACE parsing should be able to pick up arguments to predicates:
     "ALLOW ROLE('something') ANY" or

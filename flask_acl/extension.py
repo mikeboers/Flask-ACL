@@ -5,6 +5,7 @@ import logging
 from pprint import pformat
 from urllib import urlencode
 
+import flask
 from flask import request
 from flask.ext.login import current_user
 import werkzeug as wz
@@ -41,12 +42,20 @@ class AuthzManager(object):
         app.errorhandler(_Redirect)(lambda r: flask.redirect(r.args[0]))
 
     def predicate(self, name, predicate=None):
+        """Define a new predicate (direclty, or as a decorator).
+
+        ::
+            @authz.predicate
+            def ROOT(user, **ctx):
+                # return True of user is in group "wheel".
+        """
         if predicate is None:
             return functools.partial(self.predicate, name)
         self.predicates[name] = predicate
         return predicate
 
     def permission_set(self, name, permission_set=None):
+        """Define a new permission set (directly, or as a decorator)."""
         if permission_set is None:
             return functools.partial(self.permission_set, name)
         self.permission_sets[name] = permission_set
@@ -54,7 +63,7 @@ class AuthzManager(object):
 
 
     def context_processor(self, func):
-        """Register a function to build auth contexts.
+        """Register a function to build authorization contexts.
 
         The function is called with no arguments, and must return a dict of new
         context material.
@@ -62,8 +71,21 @@ class AuthzManager(object):
         """
         self._context_processors.append(func)
 
-    def ACL(self, *acl, **options):
-        def _ACL(func):
+    def route_acl(self, *acl, **options):
+        """Decorator to attach an ACL to a route.
+
+        ::
+            @app.route('/url/to/view')
+            @authz.route_acl('''
+                ALLOW WHEEL ALL
+                DENY  ANY   ALL
+            ''')
+            def my_admin_function():
+                pass
+
+        """
+
+        def _route_acl(func):
 
             func.__acl__ = acl
 
@@ -74,7 +96,7 @@ class AuthzManager(object):
                 return func(*args, **kwargs)
 
             return wrapped
-        return _ACL
+        return _route_acl
 
     def can(self, permission, obj, **kwargs):
         """Check if we can do something with an object.
