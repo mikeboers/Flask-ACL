@@ -70,36 +70,37 @@
 <span class="p">]</span>
 </pre></div>
 </div>
-<p>### Permission Sets</p>
-<p>A &#8220;permission&#8221; is a single object that represents an action that a user may want to take. This can be a string, tuple, anyting, but usually I use strings such as <cite>&#8220;group.read&#8221;</cite> and <cite>&#8220;group.write&#8221;</cite>.</p>
+<div class="section" id="permission-sets">
+<h3>Permission Sets<a class="headerlink" href="#permission-sets" title="Permalink to this headline">¶</a></h3>
+<p>A &#8220;permission&#8221; is a single object that represents an action that a user may want to take. This can be a string, tuple, anyting, but usually I use strings such as <tt class="docutils literal"><span class="pre">&quot;group.read&quot;</span></tt> and <tt class="docutils literal"><span class="pre">&quot;group.write&quot;</span></tt>.</p>
 <p>A &#8220;permission set&#8221; may be a single string, a collection, or a callable.</p>
-<p>If a string, a permission is in the permission set if <cite>permission == permission-set</cite>.</p>
-<p>If a collection (e.g. <cite>set</cite>, <cite>tuple</cite>, <cite>list</cite>), a permission is in the permission set if <cite>permission in permission_set</cite>.</p>
-<p>If a callable, a permission is in the permission set if <cite>permission_set(permission)</cite>.</p>
-<p>### Predicates</p>
+<p>If a string, a permission is in the permission set if <tt class="docutils literal"><span class="pre">permission</span> <span class="pre">==</span> <span class="pre">permission-set</span></tt>.</p>
+<p>If a collection (e.g. <tt class="docutils literal"><span class="pre">set</span></tt>, <tt class="docutils literal"><span class="pre">tuple</span></tt>, <tt class="docutils literal"><span class="pre">list</span></tt>), a permission is in the permission set if <tt class="docutils literal"><span class="pre">permission</span> <span class="pre">in</span> <span class="pre">permission_set</span></tt>.</p>
+<p>If a callable, a permission is in the permission set if <tt class="docutils literal"><span class="pre">permission_set(permission)</span></tt>.</p>
+</div>
+<div class="section" id="predicates">
+<h3>Predicates<a class="headerlink" href="#predicates" title="Permalink to this headline">¶</a></h3>
 <p>A &#8220;predicate&#8221; is a test against the authentication context, and returns a truth value. These are implemented as callables that take the context as keyword arguments.</p>
 <p>Several predefined predicates check for authenticated users, local users, anonymouse users, or if a user has a given principal (e.g. email or username).</p>
-<p>### Access Control Elements</p>
+</div>
+<div class="section" id="access-control-elements">
+<h3>Access Control Elements<a class="headerlink" href="#access-control-elements" title="Permalink to this headline">¶</a></h3>
 <p>An ACE is a tuple of a truth value, a predicate, and a permission set. If the predicate matches, and the permission of interest is in the permission set, the truth value determines if the user is allowed to perform that action.</p>
-<p>E.g.: <cite>(Allow, ANY, &#8216;read&#8217;)</cite> will allow anyone to <cite>&#8216;read&#8217;</cite> an object.</p>
+<p>E.g.: <tt class="docutils literal"><span class="pre">(Allow,</span> <span class="pre">ANY,</span> <span class="pre">'read')</span></tt> will allow anyone to <tt class="docutils literal"><span class="pre">'read'</span></tt> an object.</p>
+</div>
 </div>
 <div class="section" id="protocol">
 <h2>Protocol<a class="headerlink" href="#protocol" title="Permalink to this headline">¶</a></h2>
-<p>Define ACLs on objects via an <cite>__acl__</cite> attribute. This value MUST be either a string, an interator of ACE strings, or an iterator of ACE tuples. If you provide ACE tuples permission set will not be interpreted any further, and will be used as-is.</p>
-<p>Inherit ACLs from base objects via a iterable <cite>__acl_bases__</cite> attribute, which is a sequence of other objects to look for an <cite>__acl__</cite> on.</p>
+<p>Define ACLs on objects via an <tt class="docutils literal"><span class="pre">__acl__</span></tt> attribute. This value MUST be either a string, an interator of ACE strings, or an iterator of ACE tuples. If you provide ACE tuples permission set will not be interpreted any further, and will be used as-is.</p>
+<p>Inherit ACLs from base objects via a iterable <tt class="docutils literal"><span class="pre">__acl_bases__</span></tt> attribute, which is a sequence of other objects to look for an <tt class="docutils literal"><span class="pre">__acl__</span></tt> on.</p>
 <p>ACEs from the combined ACL will be checked for a requested permission in a given context.</p>
-<p>If you wish to build your own ACL inheritance mechanism, you MUST be sure to parse ACL strings into an ACE iterator using <cite>flask.ext.acl.core.iter_aces(acl)</cite>.</p>
+<p>If you wish to build your own ACL inheritance mechanism, you MUST be sure to parse ACL strings into an ACE iterator using <tt class="docutils literal"><span class="pre">flask.ext.acl.core.iter_aces(acl)</span></tt>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span><span class="o">.</span><span class="n">__acl__</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
 <span class="s">    Allow ANY read</span>
 <span class="s">    Deny  ANY ANY</span>
 <span class="s">&#39;&#39;&#39;</span>
 <span class="n">check_permission</span><span class="p">(</span><span class="s">&#39;read&#39;</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">context</span><span class="p">)</span>
 </pre></div>
-</div>
-<p>Contents:</p>
-<div class="toctree-wrapper compound">
-<ul class="simple">
-</ul>
 </div>
 </div>
 </div>
@@ -121,7 +122,12 @@
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Flask-ACL</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#permission-sets">Permission Sets</a></li>
+<li><a class="reference internal" href="#predicates">Predicates</a></li>
+<li><a class="reference internal" href="#access-control-elements">Access Control Elements</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#protocol">Protocol</a></li>
 </ul>
 </li>

@@ -34,43 +34,46 @@ That ACL could be represented by::
     ]
 
 
-### Permission Sets
+Permission Sets
+^^^^^^^^^^^^^^^
 
-A "permission" is a single object that represents an action that a user may want to take. This can be a string, tuple, anyting, but usually I use strings such as `"group.read"` and `"group.write"`.
+A "permission" is a single object that represents an action that a user may want to take. This can be a string, tuple, anyting, but usually I use strings such as ``"group.read"`` and ``"group.write"``.
 
 A "permission set" may be a single string, a collection, or a callable.
 
-If a string, a permission is in the permission set if `permission == permission-set`.
+If a string, a permission is in the permission set if ``permission == permission-set``.
 
-If a collection (e.g. `set`, `tuple`, `list`), a permission is in the permission set if `permission in permission_set`.
+If a collection (e.g. ``set``, ``tuple``, ``list``), a permission is in the permission set if ``permission in permission_set``.
 
-If a callable, a permission is in the permission set if `permission_set(permission)`.
+If a callable, a permission is in the permission set if ``permission_set(permission)``.
 
 
-### Predicates
+Predicates
+^^^^^^^^^^
 
 A "predicate" is a test against the authentication context, and returns a truth value. These are implemented as callables that take the context as keyword arguments.
 
 Several predefined predicates check for authenticated users, local users, anonymouse users, or if a user has a given principal (e.g. email or username).
 
 
-### Access Control Elements
+Access Control Elements
+^^^^^^^^^^^^^^^^^^^^^^^
 
 An ACE is a tuple of a truth value, a predicate, and a permission set. If the predicate matches, and the permission of interest is in the permission set, the truth value determines if the user is allowed to perform that action.
 
-E.g.: `(Allow, ANY, 'read')` will allow anyone to `'read'` an object.
+E.g.: ``(Allow, ANY, 'read')`` will allow anyone to ``'read'`` an object.
 
 
 Protocol
 --------
 
-Define ACLs on objects via an `__acl__` attribute. This value MUST be either a string, an interator of ACE strings, or an iterator of ACE tuples. If you provide ACE tuples permission set will not be interpreted any further, and will be used as-is.
+Define ACLs on objects via an ``__acl__`` attribute. This value MUST be either a string, an interator of ACE strings, or an iterator of ACE tuples. If you provide ACE tuples permission set will not be interpreted any further, and will be used as-is.
 
-Inherit ACLs from base objects via a iterable `__acl_bases__` attribute, which is a sequence of other objects to look for an `__acl__` on.
+Inherit ACLs from base objects via a iterable ``__acl_bases__`` attribute, which is a sequence of other objects to look for an ``__acl__`` on.
 
 ACEs from the combined ACL will be checked for a requested permission in a given context.
 
-If you wish to build your own ACL inheritance mechanism, you MUST be sure to parse ACL strings into an ACE iterator using `flask.ext.acl.core.iter_aces(acl)`.
+If you wish to build your own ACL inheritance mechanism, you MUST be sure to parse ACL strings into an ACE iterator using ``flask.ext.acl.core.iter_aces(acl)``.
 
 ::
 
@@ -85,10 +88,11 @@ If you wish to build your own ACL inheritance mechanism, you MUST be sure to par
 
 
 
-Contents:
+..
+    Contents:
 
-.. toctree::
-   :maxdepth: 2
+    .. toctree::
+       :maxdepth: 2
 
 
 
