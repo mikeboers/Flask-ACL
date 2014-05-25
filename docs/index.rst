@@ -49,7 +49,7 @@ You can also check for permissions on your models by defining an ``__acl__`` att
 
         # ...
 
-    @app.route('/model/{id}')
+    @app.route('/model/<id>')
     def show_a_model(id):
         obj = MyModel.get(id)
         if not auths.can('read', obj):
