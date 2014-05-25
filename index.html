@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Flask-ACL &mdash; Flask-ACL 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Flask-ACL 1.0.0 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="#">Flask-ACL 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="flask-acl">
+<h1>Flask-ACL<a class="headerlink" href="#flask-acl" title="Permalink to this headline">¶</a></h1>
+<p><strong>Flask-ACL</strong> is a Python package which provides onfigurable access control lists for Flask.</p>
+<p>It is designed to allow for you to get started authorizing users immediately, but allows for a very high level of customization.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>An access control list (ACL) is a list of access control elements (ACE). An ACE is a 3-tuple of:</p>
+<ol class="arabic simple">
+<li>whether to allow or deny the permission</li>
+<li>a predicate which determines if the ACE matches the authentication context;</li>
+<li>a set of permissions that this rule applies to.</li>
+</ol>
+<p>To determine if the current user has a given permission on a given object in a given context, we iterate through the ACEs in the ACL of the object, testing each to see if the predicate is true in the context and the requested permission is in those that the ACE applies to. If both those conditions are met, the requested permission is either allowed or denied, as determined by the rule.</p>
+<p>For example, an English version of an ACL may be:</p>
+<ul class="simple">
+<li>allow root any permission;</li>
+<li>allow group admins to write;</li>
+<li>allow group members to read;</li>
+<li>deny everyone any permission.</li>
+</ul>
+<p>That ACL could be represented by:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span>
+    <span class="p">(</span><span class="s">&#39;ALLOW&#39;</span><span class="p">,</span> <span class="n">Role</span><span class="p">(</span><span class="s">&#39;wheel&#39;</span><span class="p">),</span> <span class="n">AnyPermission</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;ALLOW&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">user</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">members</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">is_admin</span><span class="p">,</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;write&#39;</span><span class="p">])),</span>
+    <span class="p">(</span><span class="s">&#39;ALLOW&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">user</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">members</span><span class="p">,</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;read&#39;</span><span class="p">])),</span>
+    <span class="p">(</span><span class="s">&#39;DENY&#39;</span><span class="p">,</span> <span class="n">Anyone</span><span class="p">,</span> <span class="n">AnyPermission</span><span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>### Permission Sets</p>
+<p>A &#8220;permission&#8221; is a single object that represents an action that a user may want to take. This can be a string, tuple, anyting, but usually I use strings such as <cite>&#8220;group.read&#8221;</cite> and <cite>&#8220;group.write&#8221;</cite>.</p>
+<p>A &#8220;permission set&#8221; may be a single string, a collection, or a callable.</p>
+<p>If a string, a permission is in the permission set if <cite>permission == permission-set</cite>.</p>
+<p>If a collection (e.g. <cite>set</cite>, <cite>tuple</cite>, <cite>list</cite>), a permission is in the permission set if <cite>permission in permission_set</cite>.</p>
+<p>If a callable, a permission is in the permission set if <cite>permission_set(permission)</cite>.</p>
+<p>### Predicates</p>
+<p>A &#8220;predicate&#8221; is a test against the authentication context, and returns a truth value. These are implemented as callables that take the context as keyword arguments.</p>
+<p>Several predefined predicates check for authenticated users, local users, anonymouse users, or if a user has a given principal (e.g. email or username).</p>
+<p>### Access Control Elements</p>
+<p>An ACE is a tuple of a truth value, a predicate, and a permission set. If the predicate matches, and the permission of interest is in the permission set, the truth value determines if the user is allowed to perform that action.</p>
+<p>E.g.: <cite>(Allow, ANY, &#8216;read&#8217;)</cite> will allow anyone to <cite>&#8216;read&#8217;</cite> an object.</p>
+</div>
+<div class="section" id="protocol">
+<h2>Protocol<a class="headerlink" href="#protocol" title="Permalink to this headline">¶</a></h2>
+<p>Define ACLs on objects via an <cite>__acl__</cite> attribute. This value MUST be either a string, an interator of ACE strings, or an iterator of ACE tuples. If you provide ACE tuples permission set will not be interpreted any further, and will be used as-is.</p>
+<p>Inherit ACLs from base objects via a iterable <cite>__acl_bases__</cite> attribute, which is a sequence of other objects to look for an <cite>__acl__</cite> on.</p>
+<p>ACEs from the combined ACL will be checked for a requested permission in a given context.</p>
+<p>If you wish to build your own ACL inheritance mechanism, you MUST be sure to parse ACL strings into an ACE iterator using <cite>flask.ext.acl.core.iter_aces(acl)</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">obj</span><span class="o">.</span><span class="n">__acl__</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">    Allow ANY read</span>
+<span class="s">    Deny  ANY ANY</span>
+<span class="s">&#39;&#39;&#39;</span>
+<span class="n">check_permission</span><span class="p">(</span><span class="s">&#39;read&#39;</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">context</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Flask-ACL</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#protocol">Protocol</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="#">Flask-ACL 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
