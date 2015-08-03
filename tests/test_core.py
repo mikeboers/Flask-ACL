@@ -11,13 +11,13 @@ class TestCoreCheck(FlaskTestCase):
     def test_always_allow(self):
         with self.client:
             self.client.get('/')
-            self.assertIs(True, check('premission', '''
+            self.assertIs(True, check('permission', '''
                 ALLOW ANY ALL
             '''))
 
     def test_always_deny(self):
         with self.client:
             self.client.get('/')
-            self.assertIs(False, check('premission', '''
+            self.assertIs(False, check('permission', '''
                 DENY ANY ALL
             '''))
