@@ -7,7 +7,7 @@ from urllib import urlencode
 
 import flask
 from flask import request, current_app
-from flask.ext.login import current_user
+from flask_login import current_user
 import werkzeug as wz
 
 from flask_acl.core import iter_object_acl, get_object_context, check
