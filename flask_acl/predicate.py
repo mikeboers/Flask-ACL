@@ -64,21 +64,21 @@ class Or(And):
 
 class Authenticated(object):
     def __call__(self, user, **kw):
-        return user.is_authenticated()
+        return user.is_authenticated
     def __repr__(self):
         return 'AUTHENTICATED'
 
 
 class Active(object):
     def __call__(self, user, **kw):
-        return user.is_active()
+        return user.is_active
     def __repr__(self):
         return 'ACTIVE'
 
 
 class Anonymous(object):
     def __call__(self, user, **kw):
-        return user.is_anonymous()
+        return user.is_anonymous
     def __repr__(self):
         return 'ANONYMOUS'
 
