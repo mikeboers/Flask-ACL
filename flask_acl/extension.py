@@ -29,9 +29,11 @@ class ACLManager(object):
     login_view = 'login'
 
     def __init__(self, app=None):
-        self._context_processors = []
-        self.permission_sets = default_permission_sets.copy()
+        self.context_processors = []
         self.predicates = default_predicates.copy()
+        self.predicate_parsers = []
+        self.permission_sets = default_permission_sets.copy()
+        self.permission_set_parsers = []
         if app:
             self.init_app(app)
 
@@ -45,29 +47,6 @@ class ACLManager(object):
         # I suspect that Werkzeug has something for this already...
         app.errorhandler(_Redirect)(lambda r: flask.redirect(r.args[0]))
 
-
-    def predicate(self, name, predicate=None):
-        """Define a new predicate (direclty, or as a decorator).
-
-        E.g.::
-
-            @authz.predicate
-            def ROOT(user, **ctx):
-                # return True of user is in group "wheel".
-        """
-        if predicate is None:
-            return functools.partial(self.predicate, name)
-        self.predicates[name] = predicate
-        return predicate
-
-    def permission_set(self, name, permission_set=None):
-        """Define a new permission set (directly, or as a decorator)."""
-        if permission_set is None:
-            return functools.partial(self.permission_set, name)
-        self.permission_sets[name] = permission_set
-        return permission_set
-
-
     def context_processor(self, func):
         """Register a function to build authorization contexts.
 
@@ -75,7 +54,64 @@ class ACLManager(object):
         context material.
 
         """
-        self._context_processors.append(func)
+        self.context_processors.append(func)
+
+    def predicate_parser(self, func):
+        """Define a new predicate parser.
+
+        E.g.::
+
+            @authz.predicate_parser
+            def parse_groups(pred):
+                if pred.startswith('group:'):
+                    return Group(pred.split(':')[1])
+
+        """
+        self.predicate_parsers.append(func)
+
+    def permission_set_parser(self, func):
+        """Define a new permission set parser.
+
+        E.g.::
+
+            @authz.permission_set_parser
+            def parse_globs(pattern):
+                if '*' in pattern:
+                    reobj = re.compile(fnmatch.translate(pattern))
+                    return reobj.match
+
+        """
+        self.permission_set_parser.append(func)
+
+    def predicate(self, name, func=None):
+        """Define a new predicate (directly, or as a decorator).
+
+        E.g.::
+
+            @authz.predicate('ROOT')
+            def is_root(user, **ctx):
+                # return True of user is in group "wheel".
+
+        """
+        if func is None:
+            return functools.partial(self.predicate, name)
+        self.predicates[name] = func
+        return func
+
+    def permission_set(self, name, func=None):
+        """Define a new permission set (directly, or as a decorator).
+
+        E.g.::
+
+            @authz.permission_set('HTTP')
+            def is_http_perm(perm):
+                return perm.startswith('http.')
+
+        """
+        if func is None:
+            return functools.partial(self.predicate, name)
+        self.permission_sets[name] = func
+        return func
 
     def route_acl(self, *acl, **options):
         """Decorator to attach an ACL to a route.
@@ -120,7 +156,7 @@ class ACLManager(object):
         """
 
         context = {'user': current_user}
-        for func in self._context_processors:
+        for func in self.context_processors:
             context.update(func())
         context.update(get_object_context(obj))
         context.update(kwargs)

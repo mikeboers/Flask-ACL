@@ -13,6 +13,7 @@ class All(object):
    
 default_permission_sets = {
     'ALL': All(),
+    'ANY': All(), # Common synonym.
     'http.get': set(('http.get', 'http.head', 'http.options')),
 }
 
@@ -23,11 +24,21 @@ def parse_permission_set(input):
     Requires a Flask app context.
 
     """
+
+    # Priority goes to the user's parsers.
+    if isinstance(input, basestring):
+        for func in current_acl_manager.permission_set_parsers:
+            res = func(input)
+            if res is not None:
+                input = res
+                break
+
     if isinstance(input, basestring):
         try:
             return current_acl_manager.permission_sets[input]
         except KeyError:
             raise ValueError('unknown permission set %r' % input)
+
     return input
 
 

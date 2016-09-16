@@ -5,6 +5,14 @@ from flask_acl.globals import current_acl_manager
 
 def parse_predicate(input):
     
+    # Priority goes to the user's parsers.
+    if isinstance(input, basestring):
+        for func in current_acl_manager.predicate_parsers:
+            res = func(input)
+            if res is not None:
+                input = res
+                break
+
     if isinstance(input, basestring):
         negate = input.startswith('!')
         if negate:
@@ -92,5 +100,6 @@ default_predicates = {
     'LOCAL': Local(),
     'REMOTE': Remote(),
     'ANY': Any(),
+    'ALL': Any(), # Common synonym.
 }
 
