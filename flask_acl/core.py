@@ -1,8 +1,12 @@
+import logging
 import re
 
 from flask_acl.permission import parse_permission_set, is_permission_in_set
 from flask_acl.predicate import parse_predicate
 from flask_acl.state import parse_state
+
+
+log = logging.getLogger(__name__)
 
 
 def parse_acl(acl_iter):
@@ -21,17 +25,10 @@ def parse_acl(acl_iter):
             chunk = [chunk]
 
         for ace in chunk:
-
-            # If this was provided as a string, then parse the permission set.
-            # Otherwise, use it as-is, which will result in an equality test.
             if isinstance(ace, basestring):
                 ace = ace.split(None, 2)
-                state, predicate, permission_set = ace
-                yield parse_state(state), parse_predicate(predicate), parse_permission_set(permission_set)
-            else:
-                state, predicate, permission_set = ace
-                yield parse_state(state), parse_predicate(predicate), permission_set
-
+            state, predicate, permission_set = ace
+            yield parse_state(state), parse_predicate(predicate), parse_permission_set(permission_set)
 
 
 def iter_object_graph(obj, parents_first=False):
@@ -80,11 +77,10 @@ def check(permission, raw_acl, **context):
     for state, predicate, permission_set in parse_acl(raw_acl):
         pred_match = predicate(**context)
         perm_match = is_permission_in_set(permission, permission_set)
-        # log.debug('can %s %r(%s) %r%s' % (
+        # log.debug('can %s %r [%s] %r [%s]' % (
         #     'ALLOW' if state else 'DENY',
         #     predicate, pred_match,
-        #     permission_set,
-        #     ' -> ' + ('ALLOW' if state else 'DENY') + ' ' + permission if (pred_match and perm_match) else '',
+        #     permission_set, perm_match,
         # ))
         if pred_match and perm_match:
             return state

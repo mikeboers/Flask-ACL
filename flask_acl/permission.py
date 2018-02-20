@@ -37,7 +37,7 @@ def parse_permission_set(input):
         try:
             return current_acl_manager.permission_sets[input]
         except KeyError:
-            raise ValueError('unknown permission set %r' % input)
+            pass
 
     return input
 
