@@ -45,7 +45,7 @@ Predicates
 
 A "predicate" is a test against the authentication context, and returns a truth value. These are implemented as callables that take the context as keyword arguments.
 
-Several predefined predicates check for authenticated users, local users, anonymouse users, or if a user has a given principal (e.g. email or username).
+Several predefined predicates check for authenticated users, local users, anonymous users, or if a user has a given principal (e.g. email or username).
 
 
 Access Control Elements
