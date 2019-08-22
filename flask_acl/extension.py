@@ -183,7 +183,7 @@ class ACLManager(object):
         if not res:
             if flash_message and not stealth:
                 flask.flash(flash_message, 'danger')
-            if current_user.is_authenticated():
+            if current_user.is_authenticated:
                 if flash_message is not False:
                     flask.flash(flash_message or 'You are not permitted to "%s" this resource' % permission)
                 flask.abort(403)
