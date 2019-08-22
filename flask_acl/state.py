@@ -23,7 +23,7 @@ def parse_state(state):
     """
     if isinstance(state, bool):
         return state
-    if not isinstance(state, basestring):
+    if not isinstance(state, str):
         raise TypeError('ACL state must be bool or string')
     try:
         return _state_strings[state.lower()]

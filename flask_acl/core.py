@@ -12,12 +12,12 @@ log = logging.getLogger(__name__)
 def parse_acl(acl_iter):
     """Parse a string, or list of ACE definitions, into usable ACEs."""
 
-    if isinstance(acl_iter, basestring):
+    if isinstance(acl_iter, str):
         acl_iter = [acl_iter]
 
     for chunk in acl_iter:
 
-        if isinstance(chunk, basestring):
+        if isinstance(chunk, str):
             chunk = chunk.splitlines()
             chunk = [re.sub(r'#.+', '', line).strip() for line in chunk]
             chunk = filter(None, chunk)
@@ -25,7 +25,7 @@ def parse_acl(acl_iter):
             chunk = [chunk]
 
         for ace in chunk:
-            if isinstance(ace, basestring):
+            if isinstance(ace, str):
                 ace = ace.split(None, 2)
             state, predicate, permission_set = ace
             yield parse_state(state), parse_predicate(predicate), parse_permission_set(permission_set)

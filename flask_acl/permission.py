@@ -26,14 +26,14 @@ def parse_permission_set(input):
     """
 
     # Priority goes to the user's parsers.
-    if isinstance(input, basestring):
+    if isinstance(input, str):
         for func in current_acl_manager.permission_set_parsers:
             res = func(input)
             if res is not None:
                 input = res
                 break
 
-    if isinstance(input, basestring):
+    if isinstance(input, str):
         try:
             return current_acl_manager.permission_sets[input]
         except KeyError:
@@ -52,7 +52,7 @@ def is_permission_in_set(perm, perm_set):
 
     """
 
-    if isinstance(perm_set, basestring):
+    if isinstance(perm_set, str):
         return perm == perm_set
     elif isinstance(perm_set, Container):
         return perm in perm_set

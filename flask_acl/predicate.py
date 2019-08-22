@@ -6,14 +6,14 @@ from flask_acl.globals import current_acl_manager
 def parse_predicate(input):
     
     # Priority goes to the user's parsers.
-    if isinstance(input, basestring):
+    if isinstance(input, str):
         for func in current_acl_manager.predicate_parsers:
             res = func(input)
             if res is not None:
                 input = res
                 break
 
-    if isinstance(input, basestring):
+    if isinstance(input, str):
         negate = input.startswith('!')
         if negate:
             input = input[1:]
