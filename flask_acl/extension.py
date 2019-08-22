@@ -3,7 +3,8 @@ from __future__ import absolute_import
 import functools
 import logging
 from pprint import pformat
-from urllib import urlencode
+
+from six.moves.urllib.parse import urlencode
 
 import flask
 from flask import request, current_app

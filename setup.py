@@ -13,6 +13,7 @@ setup(
     install_requires=[
         'Flask',
         'Flask-Login',
+        'six'
     ],
 
     classifiers=[
