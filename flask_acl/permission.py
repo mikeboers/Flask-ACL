@@ -1,4 +1,4 @@
-from collections import Container, Callable
+from collections.abc import Container, Callable
 
 from flask_acl.globals import current_acl_manager
 
